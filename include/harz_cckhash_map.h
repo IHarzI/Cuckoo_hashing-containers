@@ -294,9 +294,11 @@ namespace harz
 				if (_data[currentTable][hashedKey].occupied)
 					if (_data[currentTable][hashedKey].key == key)
 					{
-						K_V_pair temp(_data[currentTable][hashedKey].key, _data[currentTable][hashedKey].value);
+						K_V_pair tmp;
+						tmp.key = _data[currentTable][hashedKey].key;
+						tmp.value = _data[currentTable][hashedKey].value;
 						erase(key);
-						return std::move(temp);
+						return std::move(tmp);
 					}
 				iters++;
 			}
@@ -313,9 +315,11 @@ namespace harz
 				if (_data[currentTable][hashedKey].occupied)
 					if (_data[currentTable][hashedKey].key == key)
 					{
-						K_V_pair temp(_data[currentTable][hashedKey].key, _data[currentTable][hashedKey].value);
+						K_V_pair tmp;
+						tmp.key = _data[currentTable][hashedKey].key;
+						tmp.value = _data[currentTable][hashedKey].value;
 						erase(key);
-						return std::move(temp);
+						return std::move(tmp);
 					}
 				iters++;
 			}
@@ -334,11 +338,14 @@ namespace harz
 				while (iters < _maxIters)
 				{
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
-
-					if (_data[iters % _tablesCount][hashedKey].occupied)
-						if (_data[iters % _tablesCount][hashedKey].key == element)
+					const int32_t currentTable = iters % _tablesCount;
+					if (_data[currentTable][hashedKey].occupied)
+						if (_data[currentTable][hashedKey].key == element)
 						{
-							results.push_back(_data[iters % _tablesCount][hashedKey].key, _data[iters % _tablesCount][hashedKey].value);
+							K_V_pair tmp;
+							tmp.key = _data[currentTable][hashedKey].key;
+							tmp.value = _data[currentTable][hashedKey].value;
+							results.push_back(std::move(tmp));
 							erase(element);
 						}
 					iters++;
@@ -456,27 +463,17 @@ namespace harz
 			return _CCKHT_insertData(key, value);
 		}
 
-		bool insert(K& key, V& value)
-		{
-			return _CCKHT_insertData(key, value);
-		}
-
 		bool insert(const K&& key, const V&& value)
 		{
 			return _CCKHT_insertData(key, value);
 		}
 
-		bool insert(K&& key, V&& value)
-		{
-			return _CCKHT_insertData(key, value);
-		}
-
-		bool insert(K_V_pair& k_v_pair)
+		bool insert(const K_V_pair& k_v_pair)
 		{
 			return _CCKHT_insertData(k_v_pair);
 		}
 
-		bool insert(K_V_pair&& k_v_pair)
+		bool insert(const K_V_pair&& k_v_pair)
 		{
 			return _CCKHT_insertData(k_v_pair);
 		}

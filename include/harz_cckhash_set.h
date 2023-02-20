@@ -260,8 +260,7 @@ namespace harz
 			return false;
 		}
 
-
-		V* find(const V& value)
+		const V* find(const V& value)
 		{
 			uint32_t iters = 0;
 			while (iters < _tablesCount)
@@ -277,7 +276,7 @@ namespace harz
 			return nullptr;
 		}
 
-		V* find(const V&& value)
+		const V* find(const V&& value)
 		{
 			uint32_t iters = 0;
 			while (iters < _tablesCount)
@@ -338,12 +337,12 @@ namespace harz
 			return _capacity * _tablesCount;
 		}
 
-		V* operator [](V& value)
+		const V* operator [](V& value)
 		{
 			return find(value);
 		}
 
-		V* operator [](V&& value)
+		const V* operator [](V&& value)
 		{
 			return find(value);
 		}

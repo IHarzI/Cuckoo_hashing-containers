@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <thread>
 
 #include "DEMO_harz_cckhash.h"
 
@@ -33,7 +34,7 @@ void demo_set_test() {
 	{
 		int i = rand() % 379;
 		char chr = rand() % 255;
-		CstData cdta(i, chr);
+		CstData cdta({i, chr});
 		totalInserts += hashSet.insert(cdta);
 		++iter;
 	}
@@ -44,7 +45,7 @@ void demo_set_test() {
 	{
 		int i = rand() % 379;
 		char chr = rand() % 255;
-		CstData cdta(i, chr);
+		CstData cdta({ i, chr });
 		totalErases += hashSet.erase(cdta);
 		++iter;
 	}
@@ -60,7 +61,7 @@ void demo_set_test() {
 	for (auto bol : erasesFromInitList)
 		totalErases += bol;
 
-	CstData val(4, '4');
+	CstData val({ 4, '4' });
 
 	// search for possible value, if it is in the set, printing location of value in set..
 	if (hashSet[val])
@@ -110,7 +111,7 @@ void demo_map_test() {
 		int key = rand() % 999;
 		int i = rand() % 379;
 		char chr = rand() % 255;
-		CstData cdta(i, chr);
+		CstData cdta({ i, chr });
 		totalInserts += hashMap.insert(key, cdta);
 		++iter;
 	}
@@ -136,7 +137,7 @@ void demo_map_test() {
 		totalErases += bol;
 
 	const int val_key = -26234;
-	CstData val(4, '4');
+	CstData val({ 4, '4' });
 
 	// search for possible value, if it is in the set, printing location of value in set..
 	if (hashMap[val_key])
