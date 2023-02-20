@@ -346,6 +346,17 @@ namespace harz
 		{
 			return find(value);
 		}
+		// calculate load factor
+		const double loadFactor()
+		{
+			uint32_t result = 0;
+			for (auto table : _data)
+			{
+				for (auto slot : table)
+					result += slot.occupied;
+			}
+			return (double)((double)result / (double)totalCapacity());
+		}
 
 	};
 }

@@ -8,14 +8,14 @@
 #include "include/harz_cckhash_set.h"
 // custom params for tests
 
-const int maxIters =70;
+const int maxIters = 100;
 
 using namespace harz::demo;
 using namespace harz::utils;
 
 void demo_set_test() {
 	auto start = SeedFromTime();
-	srand(SeedFromTime());
+	srand(start);
 
 	// you could specify start capacity and tables count in hash set, like harz::cuckooHashSet<CstData> hashSet(100,5), then hash set will have 5 tables with 100 capacity each
 	harz::cuckooHashSet<CstData> hashSet;
@@ -32,7 +32,7 @@ void demo_set_test() {
 	// inserting values into hash set
 	while (iter < maxIters)
 	{
-		int i = rand() % 379;
+		int i = rand();
 		char chr = rand() % 255;
 		CstData cdta({i, chr});
 		totalInserts += hashSet.insert(cdta);
@@ -43,7 +43,7 @@ void demo_set_test() {
 	iter = 0;
 	while (iter < maxIters)
 	{
-		int i = rand() % 379;
+		int i = rand();
 		char chr = rand() % 255;
 		CstData cdta({ i, chr });
 		totalErases += hashSet.erase(cdta);
@@ -86,6 +86,7 @@ void demo_set_test() {
 	std::cout << " End of [SET] test, wait 5 seconds..." << std::endl;
 
 	std::cout << "Set test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
+	std::cout << "Set load factor: " << hashSet.loadFactor() << std::endl;
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
 	std::this_thread::sleep_for(5000ms);
 }
@@ -93,7 +94,7 @@ void demo_set_test() {
 
 void demo_map_test() {
 	auto start = SeedFromTime();
-	srand(SeedFromTime());
+	srand(start);
 
 	// you could specify start capacity and tables count in hash map, like harz::cuckooHashMap<int, CstData> hashMap(100,5), then hash map will have 5 tables with 100 capacity each
 	harz::cuckooHashMap<int, CstData> hashMap;
@@ -108,8 +109,8 @@ void demo_map_test() {
 	// inserting values into hash set
 	while (iter < maxIters)
 	{
-		int key = rand() % 999;
-		int i = rand() % 379;
+		int key = rand();
+		int i = rand();
 		char chr = rand() % 255;
 		CstData cdta({ i, chr });
 		totalInserts += hashMap.insert(key, cdta);
@@ -119,7 +120,7 @@ void demo_map_test() {
 	iter = 0;
 	while (iter < maxIters)
 	{
-		int key = rand() % 999;
+		int key = rand();
 		totalErases +=  hashMap.erase(key);
 		++iter;
 	}
@@ -160,6 +161,7 @@ void demo_map_test() {
 	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashMap.find(myval.data) << std::endl;
 	std::cout << " End of [MAP] test, wait 5 seconds..." << std::endl;
 	std::cout << "Map test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
+	std::cout << "Map load factor: " << hashMap.loadFactor() << std::endl;
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
 	std::this_thread::sleep_for(5000ms);
 }
