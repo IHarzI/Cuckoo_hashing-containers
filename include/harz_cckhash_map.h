@@ -21,7 +21,7 @@ namespace harz
 	public:
 
 		cuckooHashMap(const uint32_t capacity = 64, const uint32_t tablesCount = 2)
-			: _capacity(capacity), _tablesCount(tablesCount), _maxIters(tablesCount* HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD + 1)
+			: _capacity(capacity), _tablesCount(tablesCount), _maxIters((uint32_t)(tablesCount* HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD) + 1)
 		{
 
 			_data.resize(tablesCount);
@@ -50,7 +50,7 @@ namespace harz
 		{
 			if (newCapacity <= 0)
 			{
-				newCapacity = _capacity * HARZ_CCKHASH_MAP_RESIZE_MOD + 1;
+				newCapacity = (uint32_t)(_capacity * HARZ_CCKHASH_MAP_RESIZE_MOD) + 1;
 			}
 
 			std::vector<std::vector<TableSlot>> oldData = _data;
@@ -113,7 +113,9 @@ namespace harz
 					}
 					else if (_data[currentTable][hashedKey].occupied)
 					{
-						K_V_pair temp(_data[currentTable][hashedKey].key, _data[currentTable][hashedKey].value);
+						K_V_pair temp;
+						temp.key = _data[currentTable][hashedKey].key;
+						temp.value = _data[currentTable][hashedKey].value;
 						_data[currentTable][hashedKey].key = key;
 						_data[currentTable][hashedKey].value = value;
 						return _CCKHT_insertData(std::move(temp), iterations);
@@ -132,6 +134,44 @@ namespace harz
 			}
 		}
 
+
+		bool _CCKHT_insertData(K&& key, V&& value, uint32_t iterations = 0)
+		{
+			while (true)
+			{
+				while (iterations < _maxIters)
+				{
+					const uint32_t currentTable = iterations % _tablesCount;
+					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
+
+					if (_data[currentTable][hashedKey].key == key)
+					{
+						return false;
+					}
+					else if (_data[currentTable][hashedKey].occupied)
+					{
+						K_V_pair temp;
+						temp.key = _data[currentTable][hashedKey].key;
+						temp.value = _data[currentTable][hashedKey].value;
+						_data[currentTable][hashedKey].key = std::move(key);
+						_data[currentTable][hashedKey].value = std::move(value);
+						return _CCKHT_insertData(std::move(temp), iterations);
+					}
+					else if (!_data[currentTable][hashedKey].occupied)
+					{
+						_data[currentTable][hashedKey].key = std::move(key);
+						_data[currentTable][hashedKey].value = std::move(value);
+						_data[currentTable][hashedKey].occupied = true;
+						return true;
+					}
+					iterations++;
+				}
+				resize();
+				iterations = 0;
+			}
+		}
+
+
 		bool _CCKHT_insertData(const K&& key, const V&& value, uint32_t iterations = 0)
 		{
 			while (true)
@@ -147,7 +187,9 @@ namespace harz
 					}
 					else if (_data[currentTable][hashedKey].occupied)
 					{
-						K_V_pair temp(_data[currentTable][hashedKey].key);
+						K_V_pair temp;
+						temp.key = _data[currentTable][hashedKey].key;
+						temp.value = _data[currentTable][hashedKey].value;
 						_data[currentTable][hashedKey].key = std::move(key);
 						_data[currentTable][hashedKey].value = std::move(value);
 						return _CCKHT_insertData(std::move(temp), iterations);
@@ -181,7 +223,9 @@ namespace harz
 					}
 					else if (_data[currentTable][hashedKey].occupied)
 					{
-						K_V_pair temp(_data[currentTable][hashedKey].key, _data[currentTable][hashedKey].value);
+						K_V_pair temp;
+						temp.key = _data[currentTable][hashedKey].key;
+						temp.value = _data[currentTable][hashedKey].value;
 						_data[currentTable][hashedKey].key = k_v_pair.key;
 						_data[currentTable][hashedKey].value = k_v_pair.value;
 						return _CCKHT_insertData(std::move(temp), iterations);
@@ -204,7 +248,7 @@ namespace harz
 		{
 			while (true)
 			{
-				
+
 				while (iterations < _maxIters)
 				{
 					const uint32_t currentTable = iterations % _tablesCount;
@@ -216,7 +260,9 @@ namespace harz
 					}
 					else if (_data[currentTable][hashedKey].occupied)
 					{
-						K_V_pair temp(_data[currentTable][hashedKey].key, _data[currentTable][hashedKey].value);
+						K_V_pair temp;
+						temp.key = _data[currentTable][hashedKey].key;
+						temp.value = _data[currentTable][hashedKey].value;
 						_data[currentTable][hashedKey].key = std::move(k_v_pair.key);
 						_data[currentTable][hashedKey].value = std::move(k_v_pair.value);
 						k_v_pair = temp;
@@ -306,7 +352,7 @@ namespace harz
 		{
 			_data = std::vector<std::vector<TableSlot>>();
 			_data.resize(_tablesCount);
-			for (int tables = 0; tables < _tablesCount; tables++)
+			for (uint32_t tables = 0; tables < _tablesCount; tables++)
 			{
 				_data[tables].resize(_capacity);
 			}
@@ -323,10 +369,10 @@ namespace harz
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, inTableIndex);
 					const uint32_t currentTable = inTableIndex % _tablesCount;
 
-					if (_data[currentTable][hashedKey].key == key)
+					if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
 					{
 						_data[currentTable][hashedKey].key = K();
-						_data[currentTable][hashedKey].value == V();
+						_data[currentTable][hashedKey].value = V();
 						_data[currentTable][hashedKey].occupied = false;
 						results[iters] = true;
 					}
@@ -343,10 +389,10 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].key == key)
+				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
 				{
 					_data[currentTable][hashedKey].key = K();
-					_data[currentTable][hashedKey].value == V();
+					_data[currentTable][hashedKey].value = V();
 					_data[currentTable][hashedKey].occupied = false;
 					return true;
 				}
@@ -361,10 +407,10 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].key == key)
+				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
 				{
 					_data[currentTable][hashedKey].key = K();
-					_data[currentTable][hashedKey].value == V();
+					_data[currentTable][hashedKey].value = V();
 					_data[currentTable][hashedKey].occupied = false;
 					return true;
 				}
@@ -410,7 +456,17 @@ namespace harz
 			return _CCKHT_insertData(key, value);
 		}
 
+		bool insert(K& key, V& value)
+		{
+			return _CCKHT_insertData(key, value);
+		}
+
 		bool insert(const K&& key, const V&& value)
+		{
+			return _CCKHT_insertData(key, value);
+		}
+
+		bool insert(K&& key, V&& value)
 		{
 			return _CCKHT_insertData(key, value);
 		}

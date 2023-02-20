@@ -14,13 +14,12 @@
 
 namespace harz
 {
-
 	template<typename V>
 	class cuckooHashSet
 	{
 	public:
 		cuckooHashSet(const uint32_t capacity = 64, const uint32_t tablesCount = 2)
-			: _capacity(capacity), _tablesCount(tablesCount), _maxIters(tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD + 1)
+			: _capacity(capacity), _tablesCount(tablesCount), _maxIters( (uint32_t)(tablesCount* HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD) + 1)
 		{
 			_data.resize(tablesCount);
 			for (uint32_t iter = 0; iter < tablesCount; iter++)
@@ -40,7 +39,7 @@ namespace harz
 		{
 			if (newCapacity <= 0)
 			{
-				newCapacity = _capacity * HARZ_CCKHASH_SET_RESIZE_MOD + 1;
+				newCapacity = (uint32_t)(_capacity * HARZ_CCKHASH_SET_RESIZE_MOD) + 1;
 			}
 			std::vector<std::vector<TableSlot>> oldData = _data;
 
@@ -78,7 +77,7 @@ namespace harz
 	private:
 		uint32_t _capacity = 64;
 		uint32_t _tablesCount = 2;
-		uint32_t _maxIters = _tablesCount*HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD + 1;
+		uint32_t _maxIters = _tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD + 1;
 
 		std::vector<std::vector<TableSlot>> _data;
 
@@ -102,7 +101,7 @@ namespace harz
 					}
 					else if (_data[currentTable][hashedKey].occupied)
 					{
-						V temp( _data[currentTable][hashedKey].value);
+						V temp(_data[currentTable][hashedKey].value);
 						_data[currentTable][hashedKey].value = value;
 						return _CCKHT_insertData(std::move(temp), iterations);
 					}
@@ -198,7 +197,7 @@ namespace harz
 		{
 			_data = std::vector<std::vector<TableSlot>>();
 			_data.resize(_tablesCount);
-			for (int tables = 0; tables < _tablesCount; tables++)
+			for (uint32_t tables = 0; tables < _tablesCount; tables++)
 			{
 				_data[tables].resize(_capacity);
 			}
@@ -215,9 +214,9 @@ namespace harz
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, inTableIndex);
 					const uint32_t currentTable = inTableIndex % _tablesCount;
 
-					if (_data[currentTable][hashedKey].value == element)
+					if (_data[currentTable][hashedKey].value == element && _data[currentTable][hashedKey].occupied)
 					{
-						_data[currentTable][hashedKey].value == V();
+						_data[currentTable][hashedKey].value = V();
 						_data[currentTable][hashedKey].occupied = false;
 						results[iters] = true;
 					}
@@ -234,9 +233,9 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].value == value)
+				if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
 				{
-					_data[currentTable][hashedKey].value == V();
+					_data[currentTable][hashedKey].value = V();
 					_data[currentTable][hashedKey].occupied = false;
 					return true;
 				}
@@ -248,12 +247,12 @@ namespace harz
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
 			{
-				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity,_tablesCount, iters);
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].value == value)
+				if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
 				{
-					_data[currentTable][hashedKey].value == V();
+					_data[currentTable][hashedKey].value = V();
 					_data[currentTable][hashedKey].occupied = false;
 					return true;
 				}
@@ -261,7 +260,7 @@ namespace harz
 			return false;
 		}
 
-	
+
 		V* find(const V& value)
 		{
 			uint32_t iters = 0;
