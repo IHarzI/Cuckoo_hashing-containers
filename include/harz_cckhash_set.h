@@ -3,6 +3,7 @@
 
 // Custom implementation of hash set based on cuckoo hashing
 // c++14 and newer versions(possibly c++11 also, but not guaranteed)
+// repository: https://github.com/IHarzI/Cuckoo_hashing-containers
 // made by IHarzI
 
 #include <vector>
@@ -336,12 +337,12 @@ namespace harz
 		{
 			return _capacity * _tablesCount;
 		}
-
+		// find element [value]
 		const V* operator [](V& value)
 		{
 			return find(value);
 		}
-
+		// find element [value]
 		const V* operator [](V&& value)
 		{
 			return find(value);

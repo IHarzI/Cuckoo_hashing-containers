@@ -3,6 +3,7 @@
 
 // Custom implementation of hash map based on cuckoo hashing
 // c++14 and newer versions(possibly c++11 also, but not guaranteed)
+// repository: https://github.com/IHarzI/Cuckoo_hashing-containers
 // made by IHarzI
 
 #include <vector>
@@ -510,11 +511,13 @@ namespace harz
 			return _capacity * _tablesCount;
 		}
 
+		// find element [key]
 		V* operator [](const K& key)
 		{
 			return find(key);
 		}
 
+		// find element [key]
 		V* operator [](const K&& key)
 		{
 			return find(key);
