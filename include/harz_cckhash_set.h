@@ -96,7 +96,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].value == value)
+					if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
 					{
 						return false;
 					}
@@ -128,7 +128,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].value == value)
+					if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
 					{
 						return false;
 					}
