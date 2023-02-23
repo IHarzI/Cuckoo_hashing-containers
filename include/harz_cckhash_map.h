@@ -108,7 +108,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+					if (contains(key))
 					{
 						return false;
 					}
@@ -145,7 +145,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+					if (contains(key))
 					{
 						return false;
 					}
@@ -173,7 +173,7 @@ namespace harz
 		}
 
 
-		bool _CCKHT_insertData(const K&& key, const V&& value, uint32_t iterations = 0)
+		const bool _CCKHT_insertData(const K&& key, const V&& value, uint32_t iterations = 0)
 		{
 			while (true)
 			{
@@ -182,7 +182,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+					if (contains(key))
 					{
 						return false;
 					}
@@ -209,7 +209,7 @@ namespace harz
 			}
 		}
 
-		bool _CCKHT_insertData(const K_V_pair& k_v_pair, uint32_t iterations = 0)
+		const bool _CCKHT_insertData(const K_V_pair& k_v_pair, uint32_t iterations = 0)
 		{
 			while (true)
 			{
@@ -218,7 +218,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].key == k_v_pair.key && _data[currentTable][hashedKey].occupied)
+					if (contains(k_v_pair.key))
 					{
 						return false;
 					}
@@ -245,7 +245,7 @@ namespace harz
 			}
 		}
 
-		bool _CCKHT_insertData(K_V_pair&& k_v_pair, uint32_t iterations = 0)
+		const bool _CCKHT_insertData(K_V_pair&& k_v_pair, uint32_t iterations = 0)
 		{
 			while (true)
 			{
@@ -255,7 +255,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].key == k_v_pair.key && _data[currentTable][hashedKey].occupied)
+					if (contains(k_v_pair.key))
 					{
 						return false;
 					}
@@ -390,7 +390,7 @@ namespace harz
 			return results;
 		}
 
-		bool erase(const K& key)
+		const bool erase(const K& key)
 		{
 			for (uint32_t iters = 0; iters < _maxIters; iters++)
 			{
@@ -408,7 +408,7 @@ namespace harz
 			return false;
 		}
 
-		bool erase(const K&& key)
+		const bool erase(const K&& key)
 		{
 			for (uint32_t iters = 0; iters < _maxIters; iters++)
 			{
@@ -459,22 +459,22 @@ namespace harz
 			return nullptr;
 		}
 
-		bool insert(const K& key, const V& value)
+		const bool insert(const K& key, const V& value)
 		{
 			return _CCKHT_insertData(key, value);
 		}
 
-		bool insert(const K&& key, const V&& value)
+		const bool insert(const K&& key, const V&& value)
 		{
 			return _CCKHT_insertData(key, value);
 		}
 
-		bool insert(const K_V_pair& k_v_pair)
+		const bool insert(const K_V_pair& k_v_pair)
 		{
 			return _CCKHT_insertData(k_v_pair);
 		}
 
-		bool insert(const K_V_pair&& k_v_pair)
+		const bool insert(const K_V_pair&& k_v_pair)
 		{
 			return _CCKHT_insertData(k_v_pair);
 		}
@@ -534,6 +534,45 @@ namespace harz
 			return (double)((double)result / (double)totalCapacity());
 		}
 
+		const bool contains(const K& key)
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		const bool contains(const K&& key)
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		const bool count(const K& key)
+		{
+			return contains(key);
+		}
+
+		const bool count(const K&& key)
+		{
+			return contains(key);
+		}
 	};
 }
 #endif // !HARZ_CCKHASH

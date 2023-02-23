@@ -96,7 +96,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
+					if (contains(value))
 					{
 						return false;
 					}
@@ -128,7 +128,7 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
 
-					if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
+					if (contains(value))
 					{
 						return false;
 					}
@@ -357,6 +357,46 @@ namespace harz
 					result += slot.occupied;
 			}
 			return (double)((double)result / (double)totalCapacity());
+		}
+
+		const bool contains(const V& value)
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		const bool contains(const V&& value)
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		const bool count(const V& value)
+		{
+			return contains(value);
+		}
+
+		const bool count(const V&& value)
+		{
+			return contains(value);
 		}
 
 	};
