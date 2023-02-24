@@ -66,7 +66,6 @@ namespace harz
 			if (newTablesCount <= 2)
 				return false;
 
-			_data.resize(newTablesCount);
 			_tablesCount = newTablesCount;
 			resize(_capacity);
 
@@ -193,7 +192,7 @@ namespace harz
 			return V();
 		}
 
-		// delete all elements
+		// erase all elements
 		void clear()
 		{
 			_data = std::vector<std::vector<TableSlot>>();
@@ -389,12 +388,12 @@ namespace harz
 			return false;
 		}
 
-		const bool count(const V& value)
+		const int count(const V& value)
 		{
 			return contains(value);
 		}
 
-		const bool count(const V&& value)
+		const int count(const V&& value)
 		{
 			return contains(value);
 		}
