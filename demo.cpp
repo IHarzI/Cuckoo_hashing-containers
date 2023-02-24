@@ -36,6 +36,13 @@ void demo_set_test() {
 		char chr = rand() % 255;
 		CstData cdta({i, chr});
 		totalInserts += hashSet.insert(cdta);
+		// if our load factor is more than 0.6, we can call restrain to increase tables in the set by 1
+		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
+		if (hashSet.loadFactor() > 0.6)
+		{
+			std::cout << "\nRestrain [SET]\n";
+			hashSet.restrain(hashSet.tablesCount() + 1);
+		}
 		++iter;
 	}
 
@@ -51,14 +58,14 @@ void demo_set_test() {
 	}
 
 	// insertion by init list
-	auto insertionsFromInitList = hashSet.insert({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'}});
+	auto resultFromInsertionsByInitList = hashSet.insert({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'}});
 
-	for (auto bol : insertionsFromInitList)
+	for (auto bol : resultFromInsertionsByInitList)
 		totalInserts += bol;
 	
-	auto erasesFromInitList = hashSet.erase({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'} });
+	auto resultFromErasesByInitList = hashSet.erase({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'} });
 
-	for (auto bol : erasesFromInitList)
+	for (auto bol : resultFromErasesByInitList)
 		totalErases += bol;
 
 	CstData val({ 4, '4' });
@@ -114,6 +121,13 @@ void demo_map_test() {
 		char chr = rand() % 255;
 		CstData cdta({ i, chr });
 		totalInserts += hashMap.insert(key, cdta);
+		// if our load factor is more than 0.6, we can call restrain and increase tables in the map by 1
+		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
+		if (hashMap.loadFactor() > 0.6)
+		{
+			std::cout << "\nRestrain [MAP]\n";
+			hashMap.restrain(hashMap.tablesCount() + 1);
+		}
 		++iter;
 	}
 	// erase some elements, if they present in container
@@ -126,8 +140,7 @@ void demo_map_test() {
 	}
 
 	// insertion by init list
-	auto insertionsFromInitList = hashMap.insert({ {256,{5,'%'} }, { -5345645,{25,'2'} }, { -19,{35,'P'} }
-});
+	auto insertionsFromInitList = hashMap.insert({ {256,{5,'%'} }, { -5345645,{25,'2'} }, { -19,{35,'P'} }});
 
 	for (auto bol : insertionsFromInitList)
 		totalInserts += bol;

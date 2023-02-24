@@ -78,7 +78,6 @@ namespace harz
 			if (newTablesCount <= 2)
 				return false;
 
-			_data.resize(newTablesCount);
 			_tablesCount = newTablesCount;
 			resize(_capacity);
 
@@ -99,7 +98,7 @@ namespace harz
 			return ((std::hash< uint32_t>()(std::hash<K>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
 
-		bool _CCKHT_insertData(const K& key, const V& value, uint32_t iterations = 0)
+		const bool _CCKHT_insertData(const K& key, const V& value, uint32_t iterations = 0)
 		{
 			while (true)
 			{
@@ -134,44 +133,6 @@ namespace harz
 				iterations = 0;
 			}
 		}
-
-
-		bool _CCKHT_insertData(K&& key, V&& value, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (contains(key))
-					{
-						return false;
-					}
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = std::move(key);
-						_data[currentTable][hashedKey].value = std::move(value);
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = std::move(key);
-						_data[currentTable][hashedKey].value = std::move(value);
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
 
 		const bool _CCKHT_insertData(const K&& key, const V&& value, uint32_t iterations = 0)
 		{
@@ -355,7 +316,7 @@ namespace harz
 			return results;
 		}
 
-		// delete all elements
+		// erase all elements
 		void clear()
 		{
 			_data = std::vector<std::vector<TableSlot>>();
@@ -564,12 +525,12 @@ namespace harz
 			return false;
 		}
 
-		const bool count(const K& key)
+		const int count(const K& key)
 		{
 			return contains(key);
 		}
 
-		const bool count(const K&& key)
+		const int count(const K&& key)
 		{
 			return contains(key);
 		}
