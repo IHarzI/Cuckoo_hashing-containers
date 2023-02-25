@@ -8,7 +8,7 @@
 #include "include/harz_cckhash_set.h"
 // custom params for tests
 
-const int maxIters = 100;
+const int maxIters = 150;
 
 using namespace harz::demo;
 using namespace harz::utils;
@@ -68,6 +68,9 @@ void demo_set_test() {
 	for (auto bol : resultFromErasesByInitList)
 		totalErases += bol;
 
+	// erase if using lambda function predicate
+	totalErases += hashSet.erase_if([](CstData v) {return v.chr > 100; });
+
 	CstData val({ 4, '4' });
 
 	// search for possible value, if it is in the set, printing location of value in set..
@@ -97,7 +100,6 @@ void demo_set_test() {
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
 	std::this_thread::sleep_for(5000ms);
 }
-
 
 void demo_map_test() {
 	auto start = SeedFromTime();
@@ -149,6 +151,9 @@ void demo_map_test() {
 
 	for (auto bol : erasesFromInitList)
 		totalErases += bol;
+
+	// erase if using lambda function predicate
+	totalErases += hashMap.erase_if([](int k, CstData v) {return k >= 10000 && v.chr > 100; });
 
 	const int val_key = -26234;
 	CstData val({ 4, '4' });

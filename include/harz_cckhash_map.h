@@ -72,7 +72,7 @@ namespace harz
 			return true;
 		};
 
-		// change tables count, be careful if give custom parameter, possible loss of data (if newTablesCount < current tables count)
+		// Change tables count, be careful if give custom parameter, possible loss of data (if newTablesCount < current tables count)
 		bool restrain(const uint32_t newTablesCount)
 		{
 			if (newTablesCount <= 2)
@@ -245,6 +245,51 @@ namespace harz
 
 	public:
 
+		// Erases all elements that satisfy the predicate pred from the container
+		// Predicate must take parameters in (K key, V value) form
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.key, slot.value))
+					{
+						slot.value = V();
+						slot.key = K();
+						slot.occupied = false;
+						erasuresCount += 1;
+					}
+				}
+			}
+			return erasuresCount;
+		}
+
+		// Erases all elements that satisfy the predicate pred from the container
+		// Predicate must take parameters in (K key, V value) form
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT&& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.key, slot.value))
+					{
+						slot.value = V();
+						slot.key = K();
+						slot.occupied = false;
+						erasuresCount += 1;
+					}
+				}
+			}
+			return erasuresCount;
+		}
+
+		// Extract element by key
 		K_V_pair extract(K& key)
 		{
 			uint32_t iters = 0;
@@ -267,6 +312,7 @@ namespace harz
 			return K_V_pair();
 		}
 
+		// Extract element by key
 		K_V_pair extract(K&& key)
 		{
 			uint32_t iters = 0;
@@ -287,7 +333,7 @@ namespace harz
 			}
 			return K_V_pair();
 		}
-
+		// Extract elements by keys from init list
 		std::vector<K_V_pair> extract(std::initializer_list<K> l)
 		{
 			std::vector<K_V_pair> results;
@@ -316,7 +362,7 @@ namespace harz
 			return results;
 		}
 
-		// erase all elements
+		// Erase all elements.
 		void clear()
 		{
 			_data = std::vector<std::vector<TableSlot>>();
@@ -326,7 +372,7 @@ namespace harz
 				_data[tables].resize(_capacity);
 			}
 		}
-
+		// Erase element by keys from init list.
 		std::vector<bool> erase(std::initializer_list<K> l)
 		{
 			std::vector<bool> results(l.size(), false);
@@ -350,7 +396,7 @@ namespace harz
 			}
 			return results;
 		}
-
+		// Erase element by key
 		const bool erase(const K& key)
 		{
 			for (uint32_t iters = 0; iters < _maxIters; iters++)
@@ -368,7 +414,7 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Erase element by key
 		const bool erase(const K&& key)
 		{
 			for (uint32_t iters = 0; iters < _maxIters; iters++)
@@ -386,7 +432,7 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Find element by key, returns a pointer to value
 		V* find(const K& key)
 		{
 			uint32_t iters = 0;
@@ -403,7 +449,7 @@ namespace harz
 			return nullptr;
 		}
 
-
+		// Find element by key, returns a pointer to value
 		V* find(const K&& key)
 		{
 			uint32_t iters = 0;
@@ -419,27 +465,27 @@ namespace harz
 			}
 			return nullptr;
 		}
-
+		// Insert element by key and value
 		const bool insert(const K& key, const V& value)
 		{
 			return _CCKHT_insertData(key, value);
 		}
-
+		// Insert element by {key} and {value}
 		const bool insert(const K&& key, const V&& value)
 		{
 			return _CCKHT_insertData(key, value);
 		}
-
+		// Insert element by key, value
 		const bool insert(const K_V_pair& k_v_pair)
 		{
 			return _CCKHT_insertData(k_v_pair);
 		}
-
+		// Insert element by {key, value}
 		const bool insert(const K_V_pair&& k_v_pair)
 		{
 			return _CCKHT_insertData(k_v_pair);
 		}
-
+		// Insert element by {keys, values, ....}
 		std::vector<bool> insert(std::initializer_list<K_V_pair> l) {
 			std::vector<bool> results(l.size(), false);
 			uint32_t iter = 0;
@@ -451,39 +497,39 @@ namespace harz
 			return results;
 		}
 
-		// get internal container (std::vector<std::vector<TableSlot<K,V>>)
+		// Get internal container (std::vector<std::vector<TableSlot<K,V>>)
 		const std::vector<std::vector<TableSlot>>& rawData()
 		{
 			return _data;
 		}
-
+		// Return tables count
 		const uint32_t tablesCount()
 		{
 			return _tablesCount;
 		}
-		// return capacity 
+		// Return capacity 
 		const uint32_t capacity()
 		{
 			return _capacity;
 		}
-		// return capacity * tables count
+		// Return capacity * tables count
 		const uint32_t totalCapacity()
 		{
 			return _capacity * _tablesCount;
 		}
 
-		// find element [key]
+		// Find element by [key]
 		V* operator [](const K& key)
 		{
 			return find(key);
 		}
 
-		// find element [key]
+		// Find element by [key]
 		V* operator [](const K&& key)
 		{
 			return find(key);
 		}
-		// calculate load factor
+		// Calculate load factor
 		const double loadFactor()
 		{
 			uint32_t result = 0;
@@ -494,7 +540,7 @@ namespace harz
 			}
 			return (double)((double)result / (double)totalCapacity());
 		}
-
+		// Check if map contains value on [key]
 		const bool contains(const K& key)
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
@@ -509,7 +555,7 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Check if map contains value on [key]
 		const bool contains(const K&& key)
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
@@ -524,12 +570,12 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Return count of values on [key]
 		const int count(const K& key)
 		{
 			return contains(key);
 		}
-
+		// Return count of values on [key]
 		const int count(const K&& key)
 		{
 			return contains(key);

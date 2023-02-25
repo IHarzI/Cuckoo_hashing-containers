@@ -35,7 +35,7 @@ namespace harz
 			bool occupied = false;
 		};
 
-		// change capacity("rehash" set), be careful if give custom parameter, possible loss of data (if newCapacity < current capacity of set)
+		// Change capacity("rehash" set), possible loss of data (if newCapacity < current capacity of set)
 		bool resize(uint32_t newCapacity = 0)
 		{
 			if (newCapacity <= 0)
@@ -60,7 +60,7 @@ namespace harz
 			return true;
 		}
 
-		// change tables count, be careful if give custom parameter, possible loss of data (if newTablesCount < current tables count of set)
+		// Change tables count, possible loss of data (if newTablesCount < current tables count of set)
 		bool restrain(const uint32_t newTablesCount)
 		{
 			if (newTablesCount <= 2)
@@ -151,7 +151,48 @@ namespace harz
 		}
 
 	public:
+		// Erases all elements that satisfy the predicate pred from the container.
+		// Predicate must take parameters in (V value) form.
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.value))
+					{
+						slot.value = V();
+						slot.occupied = false;
+						erasuresCount += 1;
+					}
+				}
+			}
+			return erasuresCount;
+		}
+		// Erases all elements that satisfy the predicate pred from the container.
+		// Predicate must take parameters in (V value) form.
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT&& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.value))
+					{
+						slot.value = V();
+						slot.occupied = false;
+						erasuresCount += 1;
+					}
+				}
+			}
+			return erasuresCount;
+		}
 
+		// Extract element by value
 		V extract(V& value)
 		{
 			uint32_t iters = 0;
@@ -172,6 +213,7 @@ namespace harz
 			return V();
 		}
 
+		// Extract element by value
 		V extract(V&& value)
 		{
 			uint32_t iters = 0;
@@ -192,7 +234,35 @@ namespace harz
 			return V();
 		}
 
-		// erase all elements
+		// Extract elements by values from init list
+		std::vector<V> extract(std::initializer_list<V> l)
+		{
+			std::vector<V> results;
+			results.reserve(l.size());
+			uint32_t index = 0;
+			for (index < l.size(); index++;)
+			{
+				auto& element = l[index];
+				uint32_t iters = 0;
+				while (iters < _maxIters)
+				{
+					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
+					const int32_t currentTable = iters % _tablesCount;
+					if (_data[currentTable][hashedKey].occupied)
+						if (_data[currentTable][hashedKey].value == element)
+						{
+							V tmp;
+							tmp = _data[currentTable][hashedKey].value;
+							results.push_back(std::move(tmp));
+							erase(element);
+						}
+					iters++;
+				}
+			}
+			return results;
+		}
+
+		// Erase all elements
 		void clear()
 		{
 			_data = std::vector<std::vector<TableSlot>>();
@@ -202,7 +272,7 @@ namespace harz
 				_data[tables].resize(_capacity);
 			}
 		}
-
+		// Erase element by values from init list
 		std::vector<bool> erase(std::initializer_list<V> l)
 		{
 			std::vector<bool> results(l.size(), false);
@@ -225,7 +295,7 @@ namespace harz
 			}
 			return results;
 		}
-
+		// Erase element by value
 		bool erase(const V& value)
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
@@ -242,7 +312,7 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Erase element by value
 		bool erase(const V&& value)
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
@@ -259,7 +329,7 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Find element by value, returns a const pointer to value
 		const V* find(const V& value)
 		{
 			uint32_t iters = 0;
@@ -275,7 +345,7 @@ namespace harz
 			}
 			return nullptr;
 		}
-
+		// Find element by value, returns a const pointer to value
 		const V* find(const V&& value)
 		{
 			uint32_t iters = 0;
@@ -292,16 +362,18 @@ namespace harz
 			return nullptr;
 		}
 
+		// Insert element by value
 		bool insert(const V& value)
 		{
 			return _CCKHT_insertData(value);
 		}
 
+		// Insert element by {value}
 		bool insert(const V&& value)
 		{
 			return _CCKHT_insertData(value);
 		}
-
+		// Insert element by {values, ....}
 		std::vector<bool> insert(std::initializer_list<V> l) {
 			std::vector<bool> results(l.size(), false);
 			uint32_t iter = 0;
@@ -314,39 +386,39 @@ namespace harz
 			return results;
 		}
 
-		// get internal container (std::vector<std::vector<TableSlot<V>>)
+		// Get internal container (std::vector<std::vector<TableSlot<V>>)
 		const std::vector<std::vector<TableSlot>>& rawData()
 		{
 			return _data;
 		}
-
+		// Return tables count
 		const uint32_t tablesCount()
 		{
 			return _tablesCount;
 		}
 
-		// return capacity
+		// Return capacity
 		const uint32_t capacity()
 		{
 			return _capacity;
 		}
 
-		// return capacity * tables count
+		// Return capacity * tables count
 		const uint32_t totalCapacity()
 		{
 			return _capacity * _tablesCount;
 		}
-		// find element [value]
+		// Find element by [value]
 		const V* operator [](V& value)
 		{
 			return find(value);
 		}
-		// find element [value]
+		// Find element by [value]
 		const V* operator [](V&& value)
 		{
 			return find(value);
 		}
-		// calculate load factor
+		// Calculate load factor
 		const double loadFactor()
 		{
 			uint32_t result = 0;
@@ -357,7 +429,7 @@ namespace harz
 			}
 			return (double)((double)result / (double)totalCapacity());
 		}
-
+		// Check if map contains value on [key]
 		const bool contains(const V& value)
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
@@ -372,7 +444,7 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Check if map contains value on [key]
 		const bool contains(const V&& value)
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
@@ -387,12 +459,12 @@ namespace harz
 			}
 			return false;
 		}
-
+		// Return count of values on [key]
 		const int count(const V& value)
 		{
 			return contains(value);
 		}
-
+		// Return count of values on [key]
 		const int count(const V&& value)
 		{
 			return contains(value);
