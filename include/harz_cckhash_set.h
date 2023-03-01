@@ -151,8 +151,7 @@ namespace harz
 		}
 
 	public:
-		// Erases all elements that satisfy the predicate pred from the container.
-		// Predicate must take parameters in (V value) form.
+		// Erases all elements that satisfy the predicate pred from the container
 		template <typename PredicateT>
 		const uint32_t erase_if(const PredicateT& predicate)
 		{
@@ -171,8 +170,7 @@ namespace harz
 			}
 			return erasuresCount;
 		}
-		// Erases all elements that satisfy the predicate pred from the container.
-		// Predicate must take parameters in (V value) form.
+		// Erases all elements that satisfy the predicate pred from the container
 		template <typename PredicateT>
 		const uint32_t erase_if(const PredicateT&& predicate)
 		{
@@ -190,6 +188,24 @@ namespace harz
 				}
 			}
 			return erasuresCount;
+		}
+
+		// Count all elements that satisfy the predicate
+		template <typename PredicateT>
+		const uint32_t count_if(const PredicateT& predicate)
+		{
+			uint32_t count = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.value))
+					{
+						count += 1;
+					}
+				}
+			}
+			return count;
 		}
 
 		// Extract element by value
@@ -272,7 +288,7 @@ namespace harz
 				_data[tables].resize(_capacity);
 			}
 		}
-		// Erase element by values from init list
+		// Erase elements by values from init list
 		std::vector<bool> erase(std::initializer_list<V> l)
 		{
 			std::vector<bool> results(l.size(), false);
@@ -329,7 +345,7 @@ namespace harz
 			}
 			return false;
 		}
-		// Find element by value, returns a const pointer to value
+		// Find element by value, returns a const pointer to the value
 		const V* find(const V& value)
 		{
 			uint32_t iters = 0;
@@ -345,7 +361,7 @@ namespace harz
 			}
 			return nullptr;
 		}
-		// Find element by value, returns a const pointer to value
+		// Find element by value, returns a const pointer to the value
 		const V* find(const V&& value)
 		{
 			uint32_t iters = 0;
@@ -373,7 +389,7 @@ namespace harz
 		{
 			return _CCKHT_insertData(value);
 		}
-		// Insert element by {values, ....}
+		// Insert elements by {values, ....}
 		std::vector<bool> insert(std::initializer_list<V> l) {
 			std::vector<bool> results(l.size(), false);
 			uint32_t iter = 0;
@@ -386,7 +402,7 @@ namespace harz
 			return results;
 		}
 
-		// Get internal container (std::vector<std::vector<TableSlot<V>>)
+		// Get internal container 
 		const std::vector<std::vector<TableSlot>>& rawData()
 		{
 			return _data;
@@ -453,6 +469,488 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
 
 				if (_data[currentTable][hashedKey].value == value && _data[currentTable][hashedKey].occupied)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		// Return count of values on [key]
+		const int count(const V& value)
+		{
+			return contains(value);
+		}
+		// Return count of values on [key]
+		const int count(const V&& value)
+		{
+			return contains(value);
+		}
+
+	};
+
+	// TODO Node version of container
+	// 
+	// Node-like version of cuckoo hash set
+	// Do not need for default construction of V types and occupy less memory with cost of iterationg over pointers to elements instead of raw elements in vector
+	template<typename V>
+	class cuckooNodeHashSet
+	{
+	public:
+		cuckooNodeHashSet(const uint32_t capacity = 64, const uint32_t tablesCount = 2)
+			: _capacity(capacity), _tablesCount(tablesCount), _maxIters((uint32_t)(tablesCount* HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD) + 1)
+		{
+			_data.resize(tablesCount);
+			for (uint32_t iter = 0; iter < tablesCount; iter++)
+			{
+				_data[iter].resize(capacity);
+			}
+		}
+
+		struct TableSlot
+		{
+			V* value;
+		};
+
+		// Change capacity("rehash" set), possible loss of data (if newCapacity < current capacity of set)
+		bool resize(uint32_t newCapacity = 0)
+		{
+			if (newCapacity <= 0)
+			{
+				newCapacity = (uint32_t)(_capacity * HARZ_CCKHASH_SET_RESIZE_MOD) + 1;
+			}
+			std::vector<std::vector<TableSlot>> oldData = _data;
+
+			_capacity = newCapacity;
+
+			clear();
+
+			for (std::vector<TableSlot> table : oldData)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.value)
+						insert(*slot.value);
+				};
+			};
+
+			return true;
+		}
+
+		// Change tables count, possible loss of data (if newTablesCount < current tables count of set)
+		bool restrain(const uint32_t newTablesCount)
+		{
+			if (newTablesCount <= 2)
+				return false;
+
+			_tablesCount = newTablesCount;
+			resize(_capacity);
+
+			_maxIters = _tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD;
+
+			return true;
+		}
+
+	private:
+		uint32_t _capacity = 64;
+		uint32_t _tablesCount = 2;
+		uint32_t _maxIters = _tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD + 1;
+
+		std::vector<std::vector<TableSlot>> _data;
+
+		std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](V key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		{
+			return ((std::hash< uint32_t>()(std::hash<V>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
+		};
+
+		const bool _CCKHT_insertData(const V& value, uint32_t iterations = 0)
+		{
+			while (true)
+			{
+				while (iterations < _maxIters)
+				{
+					const uint32_t currentTable = iterations % _tablesCount;
+					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
+
+					if (contains(value))
+					{
+						return false;
+					}
+					else if (_data[currentTable][hashedKey].value)
+					{
+						V temp(*_data[currentTable][hashedKey].value);
+						*_data[currentTable][hashedKey].value = value;
+						return _CCKHT_insertData(std::move(temp), iterations);
+					}
+					else if (!_data[currentTable][hashedKey].value)
+					{
+						_data[currentTable][hashedKey].value = new V{ value };
+						return true;
+					}
+					iterations++;
+				}
+				resize();
+				iterations = 0;
+			}
+		}
+
+		const bool _CCKHT_insertData(V&& value, uint32_t iterations = 0)
+		{
+			while (true)
+			{
+				while (iterations < _maxIters)
+				{
+					const uint32_t currentTable = iterations % _tablesCount;
+					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
+
+					if (contains(value))
+					{
+						return false;
+					}
+					else if (_data[currentTable][hashedKey].value)
+					{
+						V temp(*_data[currentTable][hashedKey].value);
+						*_data[currentTable][hashedKey].value = std::move(value);
+						value = temp;
+					}
+					else if (!_data[currentTable][hashedKey].value)
+					{
+						_data[currentTable][hashedKey].value = new V{ std::move(value) };
+						return true;
+					}
+					iterations++;
+				}
+				resize();
+				iterations = 0;
+			}
+		}
+
+	public:
+		// Erases all elements that satisfy the predicate pred from the container
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.value)
+					{
+						if (predicate(*slot.value))
+						{
+							delete slot.value;
+							slot.value = nullptr;
+							erasuresCount += 1;
+						}
+					}
+				}
+			}
+			return erasuresCount;
+		}
+		// Erases all elements that satisfy the predicate pred from the container
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT&& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.value)
+					{
+						if (predicate(*slot.value))
+						{
+							delete slot.value;
+							slot.value = nullptr;
+							erasuresCount += 1;
+						}
+					}
+				}
+			}
+			return erasuresCount;
+		}
+
+		// Count all elements that satisfy the predicate
+		template <typename PredicateT>
+		const uint32_t count_if(const PredicateT& predicate)
+		{
+			uint32_t count = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.value)
+					{
+						if (predicate(slot.value))
+						{
+							count += 1;
+						}
+					}
+				}
+			}
+			return count;
+		}
+
+		// Extract element by value
+		V extract(V& value)
+		{
+			uint32_t iters = 0;
+			while (iters < _maxIters)
+			{
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
+				const uint32_t currentTable = iters % _tablesCount;
+
+				if (_data[currentTable][hashedKey].value)
+					if (*_data[currentTable][hashedKey].value == value)
+					{
+						V temp(*_data[currentTable][hashedKey].value);
+						erase(value);
+						return std::move(temp);
+					}
+				iters++;
+			}
+			return V();
+		}
+
+		// Extract element by value
+		V extract(V&& value)
+		{
+			uint32_t iters = 0;
+			while (iters < _maxIters)
+			{
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
+				const uint32_t currentTable = iters % _tablesCount;
+
+				if (_data[currentTable][hashedKey].value)
+					if (*_data[currentTable][hashedKey].value == value)
+					{
+						V temp(*_data[currentTable][hashedKey].value);
+						erase(value);
+						return std::move(temp);
+					}
+				iters++;
+			}
+			return V();
+		}
+
+		// Extract elements by values from init list
+		std::vector<V> extract(std::initializer_list<V> l)
+		{
+			std::vector<V> results;
+			results.reserve(l.size());
+			uint32_t index = 0;
+			for (index < l.size(); index++;)
+			{
+				auto& element = l[index];
+				uint32_t iters = 0;
+				while (iters < _maxIters)
+				{
+					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
+					const int32_t currentTable = iters % _tablesCount;
+					if (_data[currentTable][hashedKey].value)
+						if (*_data[currentTable][hashedKey].value == element)
+						{
+							V tmp;
+							tmp = *_data[currentTable][hashedKey].value;
+							results.push_back(std::move(tmp));
+							erase(element);
+						}
+					iters++;
+				}
+			}
+			return results;
+		}
+
+		// Erase all elements
+		void clear()
+		{
+			_data = std::vector<std::vector<TableSlot>>();
+			_data.resize(_tablesCount);
+			for (uint32_t tables = 0; tables < _tablesCount; tables++)
+			{
+				_data[tables].resize(_capacity);
+			}
+		}
+		// Erase elements by values from init list
+		std::vector<bool> erase(std::initializer_list<V> l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t iters = 0;
+			for (auto element : l)
+			{
+				for (uint32_t inTableIndex = 0; inTableIndex < _tablesCount; inTableIndex++)
+				{
+					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, inTableIndex);
+					const uint32_t currentTable = inTableIndex % _tablesCount;
+					if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == element)
+					{
+						delete _data[currentTable][hashedKey].value;
+						_data[currentTable][hashedKey].value = nullptr;
+						results[iters] = true;
+					}
+				}
+				iters++;
+			}
+			return results;
+		}
+		// Erase element by value
+		bool erase(const V& value)
+		{
+			for (uint32_t iters = 0; iters < _tablesCount; iters++)
+			{
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
+				const uint32_t currentTable = iters % _tablesCount;
+
+				if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == value)
+				{
+					delete _data[currentTable][hashedKey].value;
+					_data[currentTable][hashedKey].value = nullptr;
+					return true;
+				}
+			}
+			return false;
+		}
+		// Erase element by value
+		bool erase(const V&& value)
+		{
+			for (uint32_t iters = 0; iters < _tablesCount; iters++)
+			{
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
+				const uint32_t currentTable = iters % _tablesCount;
+
+				if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == value)
+				{
+					delete _data[currentTable][hashedKey].value;
+					_data[currentTable][hashedKey].value = nullptr;
+					return true;
+				}
+			}
+			return false;
+		}
+		// Find element by value, returns a const pointer to the value
+		const V* find(const V& value)
+		{
+			uint32_t iters = 0;
+			while (iters < _tablesCount)
+			{
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
+				const uint32_t currentTable = iters % _tablesCount;
+
+				if (_data[currentTable][hashedKey].value)
+					if (*_data[currentTable][hashedKey].value == value)
+						return _data[currentTable][hashedKey].value;
+				iters++;
+			}
+			return nullptr;
+		}
+		// Find element by value, returns a const pointer to the value
+		const V* find(const V&& value)
+		{
+			uint32_t iters = 0;
+			while (iters < _tablesCount)
+			{
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iters);
+				const uint32_t currentTable = iters % _tablesCount;
+
+				if (_data[currentTable][hashedKey].value)
+					if (*_data[currentTable][hashedKey].value == value)
+						return _data[currentTable][hashedKey].value;
+				iters++;
+			}
+			return nullptr;
+		}
+
+		// Insert element by value
+		bool insert(const V& value)
+		{
+			return _CCKHT_insertData(value);
+		}
+
+		// Insert element by {value}
+		bool insert(const V&& value)
+		{
+			return _CCKHT_insertData(value);
+		}
+		// Insert elements by {values, ....}
+		std::vector<bool> insert(std::initializer_list<V> l) {
+			std::vector<bool> results(l.size(), false);
+			uint32_t iter = 0;
+			for (auto element : l)
+			{
+				if (_CCKHT_insertData(element))
+					results[iter] = true;
+				iter++;
+			}
+			return results;
+		}
+
+		// Get internal container 
+		const std::vector<std::vector<TableSlot>>& rawData()
+		{
+			return _data;
+		}
+		// Return tables count
+		const uint32_t tablesCount()
+		{
+			return _tablesCount;
+		}
+
+		// Return capacity
+		const uint32_t capacity()
+		{
+			return _capacity;
+		}
+
+		// Return capacity * tables count
+		const uint32_t totalCapacity()
+		{
+			return _capacity * _tablesCount;
+		}
+		// Find element by [value]
+		const V* operator [](V& value)
+		{
+			return find(value);
+		}
+		// Find element by [value]
+		const V* operator [](V&& value)
+		{
+			return find(value);
+		}
+		// Calculate load factor
+		const double loadFactor()
+		{
+			uint32_t result = 0;
+			for (auto table : _data)
+			{
+				for (auto slot : table)
+					result += (bool)(slot.value);
+			}
+			return (double)((double)result / (double)totalCapacity());
+		}
+		// Check if map contains value on [key]
+		const bool contains(const V& value)
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == value)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		// Check if map contains value on [key]
+		const bool contains(const V&& value)
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(value, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == value)
 				{
 					return true;
 				}

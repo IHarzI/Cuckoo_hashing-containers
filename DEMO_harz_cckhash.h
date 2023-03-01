@@ -27,6 +27,12 @@ namespace harz {
 	template<typename K, typename V>
 	class cuckooHashMap;
 
+	template<typename K, typename V>
+	class cuckooNodeHashMap;
+
+	template<typename V>
+	class cuckooNodeHashSet;
+
 	namespace demo
 	{
 		// demo, only works for types with defined stream << operators
@@ -59,6 +65,35 @@ namespace harz {
 		}
 
 		// demo, only works for types with defined stream << operators
+		template<typename V>
+		void print_CCKHSH_container(cuckooNodeHashSet<V>& cckhs_cntr)
+		{
+			std::cout << std::setw(80) << "START PRINT SECTION [SET]" << std::endl;
+			uint32_t freeSlotsCnt = 0;
+			uint32_t OccpSlotsCnt = 0;
+			auto _data = cckhs_cntr.rawData();
+			for (uint32_t tablesI = 0; tablesI < cckhs_cntr.tablesCount(); tablesI++)
+			{
+				for (uint32_t i = 0; i < cckhs_cntr.capacity(); i++)
+				{
+					if (_data[tablesI][i].value)
+					{
+						std::cout << "  " << " Value: " << *_data[tablesI][i].value << "  ";
+						OccpSlotsCnt++;
+					}
+					else
+					{
+						std::cout << " " << "[-]" << " ";
+						freeSlotsCnt++;
+					}
+				}
+				std::cout << std::endl;
+			}
+			std::cout << " Total slots count: " << freeSlotsCnt + OccpSlotsCnt << " of which free slots: " << freeSlotsCnt << " occupied slots : " << OccpSlotsCnt << std::endl;
+			std::cout << std::setw(80) << "END PRINT SECTION [SET]" << std::endl;
+		}
+
+		// demo, only works for types with defined stream << operators
 		template<typename K, typename V>
 		void print_CCKHSH_container(cuckooHashMap<K, V>& cckhs_cntr)
 		{
@@ -86,6 +121,36 @@ namespace harz {
 			std::cout << " Total slots count: " << freeSlotsCnt + OccpSlotsCnt << " of which free slots: " << freeSlotsCnt << " occupied slots : " << OccpSlotsCnt << std::endl;
 			std::cout << std::setw(80) << "END PRINT SECTION [MAP]" << std::endl;
 		}
+
+		// demo, only works for types with defined stream << operators
+		template<typename K, typename V>
+		void print_CCKHSH_container(cuckooNodeHashMap<K, V>& cckhs_cntr)
+		{
+			std::cout << std::setw(80) << "START PRINT SECTION [MAP]" << std::endl;
+			uint32_t freeSlotsCnt = 0;
+			uint32_t OccpSlotsCnt = 0;
+			auto _data = cckhs_cntr.rawData();
+			for (uint32_t tablesI = 0; tablesI < cckhs_cntr.tablesCount(); tablesI++)
+			{
+				for (uint32_t i = 0; i < cckhs_cntr.capacity(); i++)
+				{
+					if (_data[tablesI][i].element)
+					{
+						std::cout << "  " << " Key: " << _data[tablesI][i].element->key << " Value: " << _data[tablesI][i].element->value << "  ";
+						OccpSlotsCnt++;
+					}
+					else
+					{
+						std::cout << " " << "[-]" << " ";
+						freeSlotsCnt++;
+					}
+				}
+				std::cout << std::endl;
+			}
+			std::cout << " Total slots count: " << freeSlotsCnt + OccpSlotsCnt << " of which free slots: " << freeSlotsCnt << " occupied slots : " << OccpSlotsCnt << std::endl;
+			std::cout << std::setw(80) << "END PRINT SECTION [MAP]" << std::endl;
+		}
+
 
 		// Custom data type for testing hash container
 		struct CstData
