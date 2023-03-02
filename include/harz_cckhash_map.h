@@ -244,6 +244,25 @@ namespace harz
 		}
 
 	public:
+		// Exchanges the content of container with other 
+		const bool swap(cuckooHashMap<K,V>& other)
+		{
+			uint32_t tmpBuf{};
+			tmpBuf = other._tablesCount;
+			other._tablesCount = _tablesCount;
+			_tablesCount = tmpBuf;
+
+			tmpBuf = other._capacity;
+			other._capacity = _capacity;
+			_capacity = tmpBuf;
+
+			tmpBuf = other._maxIters;
+			other._maxIters = _maxIters;
+			std::swap(_data, other._data);
+
+			return true;
+
+		}
 
 		// Erases all elements that satisfy the predicate from the container
 		// Predicate must take parameters in (K key, V value) form
@@ -599,10 +618,6 @@ namespace harz
 			return contains(key);
 		}
 	};
-
-
-
-	// TODO Node version of container
 	
 	// Node-like version of cuckoo hash map
 	// Do not need for default construction of K, V types and occupy less memory with cost of iterationg over pointers to elements instead of raw elements in vector
@@ -823,6 +838,25 @@ namespace harz
 		}
 
 	public:
+
+		// Exchanges the content of container with other 
+		const bool swap(cuckooNodeHashMap<K, V>& other)
+		{
+			uint32_t tmpBuf{};
+			tmpBuf = other._tablesCount;
+			other._tablesCount = _tablesCount;
+			_tablesCount = tmpBuf;
+
+			tmpBuf = other._capacity;
+			other._capacity = _capacity;
+			_capacity = tmpBuf;
+
+			tmpBuf = other._maxIters;
+			other._maxIters = _maxIters;
+			std::swap(_data, other._data);
+
+			return true;
+		}
 
 		// Count all elements that satisfy the predicate
 		// Predicate must take parameters in (K key, V value) form

@@ -151,6 +151,26 @@ namespace harz
 		}
 
 	public:
+		// Exchanges the content of container with other 
+		const bool swap(cuckooHashSet<V>& other)
+		{
+			uint32_t tmpBuf{};
+			tmpBuf = other._tablesCount;
+			other._tablesCount = _tablesCount;
+			_tablesCount = tmpBuf;
+
+			tmpBuf = other._capacity;
+			other._capacity = _capacity;
+			_capacity = tmpBuf;
+
+			tmpBuf = other._maxIters;
+			other._maxIters = _maxIters;
+			std::swap(_data, other._data);
+
+			return true;
+
+		}
+
 		// Erases all elements that satisfy the predicate pred from the container
 		template <typename PredicateT>
 		const uint32_t erase_if(const PredicateT& predicate)
@@ -488,8 +508,6 @@ namespace harz
 
 	};
 
-	// TODO Node version of container
-	// 
 	// Node-like version of cuckoo hash set
 	// Do not need for default construction of V types and occupy less memory with cost of iterationg over pointers to elements instead of raw elements in vector
 	template<typename V>
@@ -625,6 +643,25 @@ namespace harz
 		}
 
 	public:
+		// Exchanges the content of container with other 
+		const bool swap(cuckooNodeHashSet<V>& other)
+		{
+			uint32_t tmpBuf{};
+			tmpBuf = other._tablesCount;
+			other._tablesCount = _tablesCount;
+			_tablesCount = tmpBuf;
+
+			tmpBuf = other._capacity;
+			other._capacity = _capacity;
+			_capacity = tmpBuf;
+
+			tmpBuf = other._maxIters;
+			other._maxIters = _maxIters;
+			std::swap(_data, other._data);
+
+			return true;
+
+		}
 		// Erases all elements that satisfy the predicate pred from the container
 		template <typename PredicateT>
 		const uint32_t erase_if(const PredicateT& predicate)
