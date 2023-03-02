@@ -68,7 +68,7 @@ namespace harz {
 		template<typename V>
 		void print_CCKHSH_container(cuckooNodeHashSet<V>& cckhs_cntr)
 		{
-			std::cout << std::setw(80) << "START PRINT SECTION [SET]" << std::endl;
+			std::cout << std::setw(80) << "START PRINT SECTION [NODE SET]" << std::endl;
 			uint32_t freeSlotsCnt = 0;
 			uint32_t OccpSlotsCnt = 0;
 			auto _data = cckhs_cntr.rawData();
@@ -90,7 +90,7 @@ namespace harz {
 				std::cout << std::endl;
 			}
 			std::cout << " Total slots count: " << freeSlotsCnt + OccpSlotsCnt << " of which free slots: " << freeSlotsCnt << " occupied slots : " << OccpSlotsCnt << std::endl;
-			std::cout << std::setw(80) << "END PRINT SECTION [SET]" << std::endl;
+			std::cout << std::setw(80) << "END PRINT SECTION [NODE SET]" << std::endl;
 		}
 
 		// demo, only works for types with defined stream << operators
@@ -126,7 +126,7 @@ namespace harz {
 		template<typename K, typename V>
 		void print_CCKHSH_container(cuckooNodeHashMap<K, V>& cckhs_cntr)
 		{
-			std::cout << std::setw(80) << "START PRINT SECTION [MAP]" << std::endl;
+			std::cout << std::setw(80) << "START PRINT SECTION [NODE MAP]" << std::endl;
 			uint32_t freeSlotsCnt = 0;
 			uint32_t OccpSlotsCnt = 0;
 			auto _data = cckhs_cntr.rawData();
@@ -148,7 +148,7 @@ namespace harz {
 				std::cout << std::endl;
 			}
 			std::cout << " Total slots count: " << freeSlotsCnt + OccpSlotsCnt << " of which free slots: " << freeSlotsCnt << " occupied slots : " << OccpSlotsCnt << std::endl;
-			std::cout << std::setw(80) << "END PRINT SECTION [MAP]" << std::endl;
+			std::cout << std::setw(80) << "END PRINT SECTION [NODE MAP]" << std::endl;
 		}
 
 

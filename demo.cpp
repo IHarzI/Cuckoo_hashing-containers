@@ -362,13 +362,14 @@ void main()
 {
 	// program could lag and don't output all data after the end of the tests(std::cout have limits, after all..), just rebuild the solution and restart(possibly need a few "rebuilds")
 
-	demo_map_test();
+	//demo_map_test();
 
-	// demo_node_map_test();
+	 demo_node_map_test();
 
-	// demo_node_set_test();
+	 demo_node_set_test();
 
-	demo_set_test();
+	//demo_set_test();
+
 
 
 
