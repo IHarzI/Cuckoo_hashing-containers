@@ -8,7 +8,8 @@
 #include "include/harz_cckhash_set.h"
 // custom params for tests
 
-const int maxIters = 150;
+const int maxIters = 350;
+const int waitingTime = 15;// in Seconds
 
 using namespace harz::demo;
 using namespace harz::utils;
@@ -38,7 +39,7 @@ void demo_set_test() {
 		totalInserts += hashSet.insert(cdta);
 		// if our load factor is more than 0.6, we can call restrain to increase tables in the set by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashSet.loadFactor() > 0.6)
+		if (hashSet.loadFactor() > 0.9)
 		{
 			std::cout << "\nRestrain [SET]\n";
 			hashSet.restrain(hashSet.tablesCount() + 1);
@@ -93,12 +94,12 @@ void demo_set_test() {
 	harz::demo::print_CCKHSH_container(hashSet);
 
 	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashSet.find(myval) << std::endl;
-	std::cout << " End of [SET] test, wait 5 seconds..." << std::endl;
+	std::cout << " End of [SET] test, wait " << waitingTime << " seconds..." << std::endl;
 
 	std::cout << "Set test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
 	std::cout << "Set load factor: " << hashSet.loadFactor() << std::endl;
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
-	std::this_thread::sleep_for(5000ms);
+	std::this_thread::sleep_for((waitingTime * 1000ms));
 }
 
 
@@ -125,9 +126,10 @@ void demo_node_set_test() {
 		char chr = rand() % 255;
 		CstData cdta({ i, chr });
 		totalInserts += hashSet.insert(cdta);
+		
 		// if our load factor is more than 0.6, we can call restrain to increase tables in the set by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashSet.loadFactor() > 0.6)
+		if (hashSet.loadFactor() > 0.9)
 		{
 			std::cout << "\nRestrain [NODE SET]\n";
 			hashSet.restrain(hashSet.tablesCount() + 1);
@@ -182,12 +184,12 @@ void demo_node_set_test() {
 	harz::demo::print_CCKHSH_container(hashSet);
 
 	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashSet.find(myval) << std::endl;
-	std::cout << " End of [NODE SET] test, wait 5 seconds..." << std::endl;
+	std::cout << " End of [NODE SET] test, wait " << waitingTime << " seconds..." << std::endl;
 
 	std::cout << "Set test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
 	std::cout << "Set load factor: " << hashSet.loadFactor() << std::endl;
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
-	std::this_thread::sleep_for(5000ms);
+	std::this_thread::sleep_for((waitingTime * 1000ms));
 }
 
 
@@ -215,7 +217,7 @@ void demo_map_test() {
 		totalInserts += hashMap.insert(key, cdta);
 		// if our load factor is more than 0.6, we can call restrain and increase tables in the map by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashMap.loadFactor() > 0.6)
+		if (hashMap.loadFactor() > 0.9)
 		{
 			std::cout << "\nRestrain [MAP]\n";
 			hashMap.restrain(hashMap.tablesCount() + 1);
@@ -267,11 +269,11 @@ void demo_map_test() {
 	print_CCKHSH_container(hashMap);
 
 	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashMap.find(myval.data) << std::endl;
-	std::cout << " End of [MAP] test, wait 5 seconds..." << std::endl;
+	std::cout << " End of [MAP] test, wait " << waitingTime << " seconds..." << std::endl;
 	std::cout << "Map test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
 	std::cout << "Map load factor: " << hashMap.loadFactor() << std::endl;
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
-	std::this_thread::sleep_for(5000ms);
+	std::this_thread::sleep_for((waitingTime * 1000ms));
 }
 
 
@@ -299,7 +301,7 @@ void demo_node_map_test() {
 		totalInserts += hashMap.insert(key, cdta);
 		// if our load factor is more than 0.6, we can call restrain and increase tables in the map by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashMap.loadFactor() > 0.6)
+		if (hashMap.loadFactor() > 0.9)
 		{
 			std::cout << "\nRestrain [NODE MAP]\n";
 			hashMap.restrain(hashMap.tablesCount() + 1);
@@ -351,11 +353,11 @@ void demo_node_map_test() {
 	print_CCKHSH_container(hashMap);
 
 	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashMap.find(myval.data) << std::endl;
-	std::cout << " End of [NODE MAP] test, wait 5 seconds..." << std::endl;
+	std::cout << " End of [NODE MAP] test, wait " << waitingTime << " seconds..." << std::endl;
 	std::cout << "Map test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
 	std::cout << "Map load factor: " << hashMap.loadFactor() << std::endl;
 	std::cout << "Total count of successful insertion : " << totalInserts << " Total count of successful erasures : " << totalErases << std::endl;
-	std::this_thread::sleep_for(5000ms);
+	std::this_thread::sleep_for((waitingTime * 1000ms));
 }
 
 void main()

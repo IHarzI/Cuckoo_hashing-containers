@@ -60,7 +60,7 @@ namespace harz
 
 			clear();
 
-			for (std::vector<TableSlot> table : oldData)
+			for (auto& table : oldData)
 			{
 				for (auto& slot : table)
 				{
@@ -93,7 +93,7 @@ namespace harz
 
 		std::vector<std::vector<TableSlot>> _data;
 
-		std::function <const uint32_t(K, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](K key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		std::function <const uint32_t(K, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](const K& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
 		{
 			return ((std::hash< uint32_t>()(std::hash<K>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
@@ -520,7 +520,7 @@ namespace harz
 		// Insert element by {key, value}
 		const bool insert(const K_V_pair&& k_v_pair)
 		{
-			return _CCKHT_insertData(k_v_pair);
+			return _CCKHT_insertData(std::move(k_v_pair));
 		}
 		// Insert elements by {{keys, values},{...},...}
 		std::vector<bool> insert(std::initializer_list<K_V_pair> l) {
@@ -528,7 +528,7 @@ namespace harz
 			uint32_t iter = 0;
 			for (auto element : l)
 			{
-				results[iter] = _CCKHT_insertData(element);
+				results[iter] = _CCKHT_insertData(std::move(element));
 				iter++;
 			}
 			return results;
@@ -572,7 +572,7 @@ namespace harz
 			uint32_t result = 0;
 			for (auto table : _data)
 			{
-				for (auto slot : table)
+				for (auto& slot : table)
 					result += slot.occupied;
 			}
 			return (double)((double)result / (double)totalCapacity());
@@ -619,6 +619,9 @@ namespace harz
 		}
 	};
 	
+
+	// Experimental
+
 	// Node-like version of cuckoo hash map
 	// Do not need for default construction of K, V types and occupy less memory with cost of iterationg over pointers to elements instead of raw elements in vector
 	template<typename K, typename V>
@@ -637,6 +640,20 @@ namespace harz
 			}
 		}
 
+		~cuckooNodeHashMap()
+		{
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.element)
+					{
+						delete slot.element;
+					}
+				}
+			}
+		}
+
 		struct K_V_pair
 		{
 			K key;
@@ -651,6 +668,7 @@ namespace harz
 		// ("rehash") container,  be careful if give custom parameter, possible loss of data (if newCapacity < current capacity)
 		bool resize(uint32_t newCapacity = 0)
 		{
+			std::cout << "Res" << std::endl;
 			if (newCapacity <= 0)
 			{
 				newCapacity = (uint32_t)(_capacity * HARZ_CCKHASH_MAP_RESIZE_MOD) + 1;
@@ -660,9 +678,13 @@ namespace harz
 
 			_capacity = newCapacity;
 
-			clear();
+			_data.resize(_tablesCount);
+			for (uint32_t tables = 0; tables < _tablesCount; tables++)
+			{
+				_data[tables].resize(_capacity);
+			}
 
-			for (std::vector<TableSlot> table : oldData)
+			for (auto& table : oldData)
 			{
 				for (auto& slot : table)
 				{
@@ -695,7 +717,7 @@ namespace harz
 
 		std::vector<std::vector<TableSlot>> _data;
 
-		std::function <const uint32_t(K, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](K key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		std::function <const uint32_t(K, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](const K& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
 		{
 			return ((std::hash< uint32_t>()(std::hash<K>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
@@ -837,6 +859,13 @@ namespace harz
 			}
 		}
 
+		void refreshSlot(TableSlot& slot)
+		{
+		
+			delete slot.element;
+			slot.element = NULL;
+		}
+
 	public:
 
 		// Exchanges the content of container with other 
@@ -872,8 +901,7 @@ namespace harz
 					{
 						if (predicate(slot.key, slot.value))
 						{
-							delete slot.element;
-							slot.element = NULL;
+							refreshSlot(slot);
 							count += 1;
 						}
 					}
@@ -896,8 +924,7 @@ namespace harz
 					{
 						if (predicate(slot.element->key, slot.element->value))
 						{
-							delete slot.element;
-							slot.element = NULL;
+							refreshSlot(slot);
 							erasuresCount += 1;
 						}
 					}
@@ -921,7 +948,7 @@ namespace harz
 						K_V_pair tmp;
 						tmp.key = _data[currentTable][hashedKey].element->key;
 						tmp.value = _data[currentTable][hashedKey].element->value;
-						erase(key);
+						refreshSlot(_data[currentTable][hashedKey].element);
 						return std::move(tmp);
 					}
 				iters++;
@@ -943,7 +970,7 @@ namespace harz
 						K_V_pair tmp;
 						tmp.key = _data[currentTable][hashedKey].element->key;
 						tmp.value = _data[currentTable][hashedKey].element->value;
-						erase(key);
+						refreshSlot(_data[currentTable][hashedKey].element);
 						return std::move(tmp);
 					}
 				iters++;
@@ -970,8 +997,8 @@ namespace harz
 							K_V_pair tmp;
 							tmp.key = _data[currentTable][hashedKey].element->key;
 							tmp.value = _data[currentTable][hashedKey].element->value;
+							refreshSlot(_data[currentTable][hashedKey].element);
 							results.push_back(std::move(tmp));
-							erase(element);
 						}
 					iters++;
 				}
@@ -982,7 +1009,17 @@ namespace harz
 		// Erase all elements.
 		void clear()
 		{
-			_data = std::vector<std::vector<TableSlot>>();
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.element)
+					{
+						refreshSlot(slot);
+					}
+				}
+			}
+
 			_data.resize(_tablesCount);
 			for (uint32_t tables = 0; tables < _tablesCount; tables++)
 			{
@@ -1003,9 +1040,7 @@ namespace harz
 
 					if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
 					{
-						delete _data[currentTable][hashedKey].element;
-						_data[currentTable][hashedKey].element = NULL;
-
+						refreshSlot(_data[currentTable][hashedKey]);
 						results[iters] = true;
 					}
 				}
@@ -1023,8 +1058,7 @@ namespace harz
 
 				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
 				{
-					delete _data[currentTable][hashedKey].element;
-					_data[currentTable][hashedKey].element = NULL;
+					refreshSlot(_data[currentTable][hashedKey]);
 					return true;
 				}
 			}
@@ -1040,8 +1074,7 @@ namespace harz
 
 				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
 				{
-					delete _data[currentTable][hashedKey].element;
-					_data[currentTable][hashedKey].element = NULL;
+					refreshSlot(_data[currentTable][hashedKey]);
 					return true;
 				}
 			}
@@ -1098,7 +1131,7 @@ namespace harz
 		// Insert element by {key, value}
 		const bool insert(const K_V_pair&& k_v_pair)
 		{
-			return _CCKHT_insertData(k_v_pair);
+			return _CCKHT_insertData(std::move(k_v_pair));
 		}
 		// Insert elements by {{keys, values},{...},...}
 		std::vector<bool> insert(std::initializer_list<K_V_pair> l) {
@@ -1106,7 +1139,7 @@ namespace harz
 			uint32_t iter = 0;
 			for (auto element : l)
 			{
-				results[iter] = _CCKHT_insertData(element);
+				results[iter] = _CCKHT_insertData(std::move(element));
 				iter++;
 			}
 			return results;
@@ -1148,9 +1181,9 @@ namespace harz
 		const double loadFactor()
 		{
 			uint32_t result = 0;
-			for (auto table : _data)
+			for (auto& table : _data)
 			{
-				for (auto slot : table)
+				for (auto& slot : table)
 					result += (bool)(slot.element);
 			}
 			return (double)((double)result / (double)totalCapacity());

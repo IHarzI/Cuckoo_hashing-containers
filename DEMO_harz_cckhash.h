@@ -155,8 +155,8 @@ namespace harz {
 		// Custom data type for testing hash container
 		struct CstData
 		{
-			int data;
-			char chr;
+			int data = 0;
+			char chr = 's';
 
 			friend std::ostream& operator<<(std::ostream& os, const CstData& dt)
 			{
