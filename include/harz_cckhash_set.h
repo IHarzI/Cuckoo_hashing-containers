@@ -36,7 +36,7 @@ namespace harz
 		};
 
 		// Change capacity("rehash" set), possible loss of data (if newCapacity < current capacity of set)
-		bool resize(uint32_t newCapacity = 0)
+		const bool resize(uint32_t newCapacity = 0)
 		{
 			if (newCapacity <= 0)
 			{
@@ -61,7 +61,7 @@ namespace harz
 		}
 
 		// Change tables count, possible loss of data (if newTablesCount < current tables count of set)
-		bool restrain(const uint32_t newTablesCount)
+		const bool restrain(const uint32_t newTablesCount)
 		{
 			if (newTablesCount <= 2)
 				return false;
@@ -81,7 +81,7 @@ namespace harz
 
 		std::vector<std::vector<TableSlot>> _data;
 
-		std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		const std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
 		{
 			return ((std::hash< uint32_t>()(std::hash<V>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
@@ -212,7 +212,7 @@ namespace harz
 
 		// Count all elements that satisfy the predicate
 		template <typename PredicateT>
-		const uint32_t count_if(const PredicateT& predicate)
+		const uint32_t count_if(const PredicateT& predicate) const
 		{
 			uint32_t count = 0;
 			for (auto& table : _data)
@@ -332,7 +332,7 @@ namespace harz
 			return results;
 		}
 		// Erase element by value
-		bool erase(const V& value)
+		const bool erase(const V& value)
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
 			{
@@ -349,7 +349,7 @@ namespace harz
 			return false;
 		}
 		// Erase element by value
-		bool erase(const V&& value)
+		const bool erase(const V&& value)
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
 			{
@@ -366,7 +366,7 @@ namespace harz
 			return false;
 		}
 		// Find element by value, returns a const pointer to the value
-		const V* find(const V& value)
+		const V* find(const V& value) const
 		{
 			uint32_t iters = 0;
 			while (iters < _tablesCount)
@@ -382,7 +382,7 @@ namespace harz
 			return nullptr;
 		}
 		// Find element by value, returns a const pointer to the value
-		const V* find(const V&& value)
+		const V* find(const V&& value) const
 		{
 			uint32_t iters = 0;
 			while (iters < _tablesCount)
@@ -399,13 +399,13 @@ namespace harz
 		}
 
 		// Insert element by value
-		bool insert(const V& value)
+		const bool insert(const V& value)
 		{
 			return _CCKHT_insertData(value);
 		}
 
 		// Insert element by {value}
-		bool insert(const V&& value)
+		const bool insert(const V&& value)
 		{
 			return _CCKHT_insertData(std::move(value));
 		}
@@ -423,39 +423,39 @@ namespace harz
 		}
 
 		// Get internal container 
-		const std::vector<std::vector<TableSlot>>& rawData()
+		std::vector<std::vector<TableSlot>>& rawData()
 		{
 			return _data;
 		}
 		// Return tables count
-		const uint32_t tablesCount()
+		const uint32_t tablesCount() const
 		{
 			return _tablesCount;
 		}
 
 		// Return capacity
-		const uint32_t capacity()
+		const uint32_t capacity() const
 		{
 			return _capacity;
 		}
 
 		// Return capacity * tables count
-		const uint32_t totalCapacity()
+		const uint32_t totalCapacity() const
 		{
 			return _capacity * _tablesCount;
 		}
 		// Find element by [value]
-		const V* operator [](V& value)
+		const V* operator [](V& value) const
 		{
 			return find(value);
 		}
 		// Find element by [value]
-		const V* operator [](V&& value)
+		const V* operator [](V&& value) const
 		{
 			return find(value);
 		}
 		// Calculate load factor
-		const double loadFactor()
+		const double loadFactor() const
 		{
 			uint32_t result = 0;
 			for (auto& table : _data)
@@ -466,7 +466,7 @@ namespace harz
 			return (double)((double)result / (double)totalCapacity());
 		}
 		// Check if map contains value on [key]
-		const bool contains(const V& value)
+		const bool contains(const V& value) const
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
 			{
@@ -481,7 +481,7 @@ namespace harz
 			return false;
 		}
 		// Check if map contains value on [key]
-		const bool contains(const V&& value)
+		const bool contains(const V&& value) const
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
 			{
@@ -496,12 +496,12 @@ namespace harz
 			return false;
 		}
 		// Return count of values on [key]
-		const int count(const V& value)
+		const int count(const V& value) const
 		{
 			return contains(value);
 		}
 		// Return count of values on [key]
-		const int count(const V&& value)
+		const int count(const V&& value) const
 		{
 			return contains(value);
 		}
@@ -534,7 +534,6 @@ namespace harz
 		// Change capacity("rehash" set), possible loss of data (if newCapacity < current capacity of set)
 		bool resize(uint32_t newCapacity = 0)
 		{
-			std::cout << "Res" << std::endl;
 			if (newCapacity <= 0)
 			{
 				newCapacity = (uint32_t)(_capacity * HARZ_CCKHASH_SET_RESIZE_MOD) + 1;
@@ -596,7 +595,7 @@ namespace harz
 
 		std::vector<std::vector<TableSlot>> _data;
 
-		std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = []( const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		const std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = []( const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
 		{
 			return ((std::hash< uint32_t>()(std::hash<V>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
@@ -735,7 +734,7 @@ namespace harz
 
 		// Count all elements that satisfy the predicate
 		template <typename PredicateT>
-		const uint32_t count_if(const PredicateT& predicate)
+		const uint32_t count_if(const PredicateT& predicate) const
 		{
 			uint32_t count = 0;
 			for (auto& table : _data)
@@ -867,7 +866,7 @@ namespace harz
 			return results;
 		}
 		// Erase element by value
-		bool erase(const V& value)
+		const bool erase(const V& value)
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
 			{
@@ -884,7 +883,7 @@ namespace harz
 			return false;
 		}
 		// Erase element by value
-		bool erase(const V&& value)
+		const bool erase(const V&& value)
 		{
 			for (uint32_t iters = 0; iters < _tablesCount; iters++)
 			{
@@ -934,13 +933,13 @@ namespace harz
 		}
 
 		// Insert element by value
-		bool insert(const V& value)
+		const bool insert(const V& value)
 		{
 			return _CCKHT_insertData(value);
 		}
 
 		// Insert element by {value}
-		bool insert(const V&& value)
+		const bool insert(const V&& value)
 		{
 			return _CCKHT_insertData(std::move(value));
 		}
@@ -958,24 +957,24 @@ namespace harz
 		}
 
 		// Get internal container 
-		const std::vector<std::vector<TableSlot>>& rawData()
+		std::vector<std::vector<TableSlot>>& rawData()
 		{
 			return _data;
 		}
 		// Return tables count
-		const uint32_t tablesCount()
+		const uint32_t tablesCount() const
 		{
 			return _tablesCount;
 		}
 
 		// Return capacity
-		const uint32_t capacity()
+		const uint32_t capacity() const
 		{
 			return _capacity;
 		}
 
 		// Return capacity * tables count
-		const uint32_t totalCapacity()
+		const uint32_t totalCapacity() const
 		{
 			return _capacity * _tablesCount;
 		}
@@ -990,7 +989,7 @@ namespace harz
 			return find(value);
 		}
 		// Calculate load factor
-		const double loadFactor()
+		const double loadFactor() const
 		{
 			uint32_t result = 0;
 			for (auto& table : _data)
@@ -1001,7 +1000,7 @@ namespace harz
 			return (double)((double)result / (double)totalCapacity());
 		}
 		// Check if map contains value on [key]
-		const bool contains(const V& value)
+		const bool contains(const V& value) const
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
 			{
@@ -1016,7 +1015,7 @@ namespace harz
 			return false;
 		}
 		// Check if map contains value on [key]
-		const bool contains(const V&& value)
+		const bool contains(const V&& value) const
 		{
 			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
 			{
@@ -1031,12 +1030,12 @@ namespace harz
 			return false;
 		}
 		// Return count of values on [key]
-		const int count(const V& value)
+		const int count(const V& value) const
 		{
 			return contains(value);
 		}
 		// Return count of values on [key]
-		const int count(const V&& value)
+		const int count(const V&& value) const
 		{
 			return contains(value);
 		}
