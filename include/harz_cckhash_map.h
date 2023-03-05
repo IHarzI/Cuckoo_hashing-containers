@@ -793,7 +793,7 @@ namespace harz
 	// Experimental
 
 	// Node-like version of cuckoo hash map
-	// Do not need for default construction of K, V types and occupy less memory with cost of iterationg over pointers to elements instead of raw elements in vector
+	// Do not need for default construction of K, V types and occupy less memory(unless your data size is less than size of pointer) with cost of iterating over pointers to elements instead of raw elements in vector
 	template<typename K, typename V>
 	class cuckooNodeHashMap
 	{
@@ -826,6 +826,9 @@ namespace harz
 
 		cuckooNodeHashMap& operator=(const cuckooNodeHashMap&) = delete;
 		cuckooNodeHashMap(const cuckooNodeHashMap&) = delete;
+
+		cuckooNodeHashMap& operator=(cuckooNodeHashMap&& other) = delete;
+		cuckooNodeHashMap(cuckooNodeHashMap&& other) = delete;
 
 		struct K_V_pair
 		{

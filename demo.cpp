@@ -373,8 +373,4 @@ void main()
 
 	demo_set_test();
 
-
-
-
-
 }

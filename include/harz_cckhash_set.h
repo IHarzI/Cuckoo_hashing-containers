@@ -511,7 +511,7 @@ namespace harz
 	// Experimental
 
 	// Node-like version of cuckoo hash set
-	// Do not need for default construction of V types and occupy less memory with cost of iterationg over pointers to elements instead of raw elements in vector
+	// Do not need for default construction of V types and occupy less memory(unless your data size is less than size of pointer) with cost of iterating over pointers to elements instead of raw elements in vector
 	template<typename V>
 	class cuckooNodeHashSet
 	{
@@ -542,6 +542,9 @@ namespace harz
 
 		cuckooNodeHashSet& operator=(const cuckooNodeHashSet&) = delete;
 		cuckooNodeHashSet(const cuckooNodeHashSet&) = delete;
+
+		cuckooNodeHashSet& operator=(cuckooNodeHashSet&& other) = delete;
+		cuckooNodeHashSet(cuckooNodeHashSet&& other) = delete;
 
 		struct TableSlot
 		{

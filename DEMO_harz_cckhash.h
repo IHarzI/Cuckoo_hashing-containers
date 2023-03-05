@@ -164,7 +164,7 @@ namespace harz {
 				return os;
 			}
 
-			bool operator==(const CstData& other) const
+			const bool operator==(const CstData& other) const
 			{
 				return data == other.data
 					&& chr == other.chr;
