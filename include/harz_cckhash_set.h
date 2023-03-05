@@ -526,6 +526,23 @@ namespace harz
 			}
 		}
 
+		~cuckooNodeHashSet()
+		{
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.value)
+					{
+						delete slot.value;
+					}
+				}
+			}
+		}
+
+		cuckooNodeHashSet& operator=(const cuckooNodeHashSet&) = delete;
+		cuckooNodeHashSet(const cuckooNodeHashSet&) = delete;
+
 		struct TableSlot
 		{
 			V* value;
@@ -572,20 +589,6 @@ namespace harz
 			_maxIters = _tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD;
 
 			return true;
-		}
-
-		~cuckooNodeHashSet()
-		{
-			for (auto& table : _data)
-			{
-				for (auto& slot : table)
-				{
-					if (slot.value)
-					{
-						delete slot.value;
-					}
-				}
-			}
 		}
 
 	private:
@@ -900,7 +903,7 @@ namespace harz
 			return false;
 		}
 		// Find element by value, returns a const pointer to the value
-		const V* find(const V& value)
+		const V* find(const V& value) const
 		{
 			uint32_t iters = 0;
 			while (iters < _tablesCount)
@@ -916,7 +919,7 @@ namespace harz
 			return nullptr;
 		}
 		// Find element by value, returns a const pointer to the value
-		const V* find(const V&& value)
+		const V* find(const V&& value) const
 		{
 			uint32_t iters = 0;
 			while (iters < _tablesCount)
@@ -979,12 +982,12 @@ namespace harz
 			return _capacity * _tablesCount;
 		}
 		// Find element by [value]
-		const V* operator [](V& value)
+		const V* operator [](V& value) const
 		{
 			return find(value);
 		}
 		// Find element by [value]
-		const V* operator [](V&& value)
+		const V* operator [](V&& value) const
 		{
 			return find(value);
 		}

@@ -232,7 +232,7 @@ void demo_map_test() {
 		totalErases +=  hashMap.erase(key);
 		++iter;
 	}
-
+	harz::cuckooHashMap<int, CstData> anMap = hashMap;
 	// insertion by init list
 	auto insertionsFromInitList = hashMap.insert({ {256,{5,'%'} }, { -5345645,{25,'2'} }, { -19,{35,'P'} }});
 

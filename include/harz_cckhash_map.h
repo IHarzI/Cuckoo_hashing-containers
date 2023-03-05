@@ -824,6 +824,9 @@ namespace harz
 			}
 		}
 
+		cuckooNodeHashMap& operator=(const cuckooNodeHashMap&) = delete;
+		cuckooNodeHashMap(const cuckooNodeHashMap&) = delete;
+
 		struct K_V_pair
 		{
 			K key;
@@ -1463,8 +1466,6 @@ namespace harz
 			}
 		}
 
-
-
 		// Insert elements by {{keys, values},{...},...}
 		std::vector<bool> insert(std::initializer_list<K_V_pair> l) {
 			std::vector<bool> results(l.size(), false);
@@ -1499,7 +1500,7 @@ namespace harz
 		}
 
 		// Find element by [key]
-		V* operator [](const K& key) 
+		V* operator [](const K& key)
 		{
 			return find(key);
 		}
