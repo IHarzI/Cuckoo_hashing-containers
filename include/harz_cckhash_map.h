@@ -10,7 +10,7 @@
 #include <functional>
 
 // custom params, experiment with different values for better perfomance
-#define HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD (2.5f) 
+#define HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD (3.5f) 
 #define HARZ_CCKHASH_MAP_RESIZE_MOD (1.5f)
 
 namespace harz
@@ -810,20 +810,6 @@ namespace harz
 			}
 		}
 
-		~cuckooNodeHashMap()
-		{
-			for (auto& table : _data)
-			{
-				for (auto& slot : table)
-				{
-					if (slot.element)
-					{
-						delete slot.element;
-					}
-				}
-			}
-		}
-
 		cuckooNodeHashMap& operator=(const cuckooNodeHashMap&) = delete;
 		cuckooNodeHashMap(const cuckooNodeHashMap&) = delete;
 
@@ -838,7 +824,7 @@ namespace harz
 
 		struct TableSlot
 		{
-			K_V_pair* element = nullptr;
+			std::shared_ptr<K_V_pair> element{ nullptr };
 		};
 
 		// ("rehash") container,  be careful if give custom parameter, possible loss of data (if newCapacity < current capacity)
@@ -864,7 +850,10 @@ namespace harz
 				for (auto& slot : table)
 				{
 					if (slot.element)
+					{
 						insert(std::move(*slot.element));
+						slot.element.reset();
+					}
 				};
 			};
 
@@ -921,7 +910,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ key, value };
+						_data[currentTable][hashedKey].element.reset(new K_V_pair{key, value});
 						return true;
 					}
 					iterations++;
@@ -955,7 +944,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ key, value };
+						_data[currentTable][hashedKey].element.reset(new K_V_pair{ key, value });
 						return true;
 					}
 					iterations++;
@@ -989,7 +978,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ k_v_pair.key, k_v_pair.value };
+						_data[currentTable][hashedKey].element.reset( new K_V_pair{k_v_pair.key, k_v_pair.value});
 						return true;
 					}
 					iterations++;
@@ -1024,7 +1013,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ std::move(k_v_pair) };
+						_data[currentTable][hashedKey].element.reset(new K_V_pair{std::move(k_v_pair)});
 						return true;
 					}
 					iterations++;
@@ -1032,13 +1021,6 @@ namespace harz
 				resize();
 				iterations = 0;
 			}
-		}
-
-		void refreshSlot(TableSlot& slot)
-		{
-		
-			delete slot.element;
-			slot.element = NULL;
 		}
 
 	public:
@@ -1074,9 +1056,8 @@ namespace harz
 				{
 					if (slot.element)
 					{
-						if (predicate(slot.key, slot.value))
+						if (predicate(slot.element->key, slot.element->value))
 						{
-							refreshSlot(slot);
 							count += 1;
 						}
 					}
@@ -1099,7 +1080,7 @@ namespace harz
 					{
 						if (predicate(slot.element->key, slot.element->value))
 						{
-							refreshSlot(slot);
+							slot.element.reset();
 							erasuresCount += 1;
 						}
 					}
@@ -1123,7 +1104,7 @@ namespace harz
 						K_V_pair tmp;
 						tmp.key = _data[currentTable][hashedKey].element->key;
 						tmp.value = _data[currentTable][hashedKey].element->value;
-						refreshSlot(_data[currentTable][hashedKey].element);
+						_data[currentTable][hashedKey].element.reset();
 						return std::move(tmp);
 					}
 				iters++;
@@ -1145,7 +1126,7 @@ namespace harz
 						K_V_pair tmp;
 						tmp.key = _data[currentTable][hashedKey].element->key;
 						tmp.value = _data[currentTable][hashedKey].element->value;
-						refreshSlot(_data[currentTable][hashedKey].element);
+						_data[currentTable][hashedKey].element.reset();
 						return std::move(tmp);
 					}
 				iters++;
@@ -1172,7 +1153,7 @@ namespace harz
 							K_V_pair tmp;
 							tmp.key = _data[currentTable][hashedKey].element->key;
 							tmp.value = _data[currentTable][hashedKey].element->value;
-							refreshSlot(_data[currentTable][hashedKey].element);
+							_data[currentTable][hashedKey].element.reset();
 							results.push_back(std::move(tmp));
 						}
 					iters++;
@@ -1190,7 +1171,7 @@ namespace harz
 				{
 					if (slot.element)
 					{
-						refreshSlot(slot);
+						slot.element.reset();
 					}
 				}
 			}
@@ -1215,7 +1196,7 @@ namespace harz
 
 					if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
 					{
-						refreshSlot(_data[currentTable][hashedKey]);
+						_data[currentTable][hashedKey].element.reset();
 						results[iters] = true;
 					}
 				}
@@ -1233,7 +1214,7 @@ namespace harz
 
 				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
 				{
-					refreshSlot(_data[currentTable][hashedKey]);
+					_data[currentTable][hashedKey].element.reset();
 					return true;
 				}
 			}
@@ -1249,7 +1230,7 @@ namespace harz
 
 				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
 				{
-					refreshSlot(_data[currentTable][hashedKey]);
+					_data[currentTable][hashedKey].element.reset();
 					return true;
 				}
 			}
@@ -1339,7 +1320,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ key,value};
+						_data[currentTable][hashedKey].element.reset( new K_V_pair{ key,value});
 						return true;
 					}
 					iterations++;
@@ -1379,7 +1360,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ key,value };
+						_data[currentTable][hashedKey].element.reset(new K_V_pair{key,value});
 						return true;
 					}
 					iterations++;
@@ -1419,7 +1400,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ k_v_pair };
+						_data[currentTable][hashedKey].element.reset(new K_V_pair{k_v_pair});
 						return true;
 					}
 					iterations++;
@@ -1459,7 +1440,7 @@ namespace harz
 					}
 					else
 					{
-						_data[currentTable][hashedKey].element = new K_V_pair{ std::move(k_v_pair) };
+						_data[currentTable][hashedKey].element.reset(new K_V_pair{std::move(k_v_pair)});
 						return true;
 					}
 					iterations++;

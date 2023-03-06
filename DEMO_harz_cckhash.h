@@ -42,14 +42,14 @@ namespace harz {
 			std::cout << std::setw(80)<< "START PRINT SECTION [SET]"  << std::endl;
 			uint32_t freeSlotsCnt = 0; 
 			uint32_t OccpSlotsCnt = 0;
-			auto _data = cckhs_cntr.rawData();
-			for (uint32_t tablesI = 0; tablesI < cckhs_cntr.tablesCount(); tablesI++)
+			auto& data = cckhs_cntr.rawData();
+			for (auto& table : data)
 			{
-				for (uint32_t i = 0; i < cckhs_cntr.capacity(); i++)
+				for (auto& slot : table)
 				{
-					if (_data[tablesI][i].occupied)
+					if (slot.occupied)
 					{
-						std::cout << "  " << " Value: " <<  _data[tablesI][i].value << "  ";
+						std::cout << "  " << " Value: " << slot.value << "  ";
 						OccpSlotsCnt++;
 					}
 					else
@@ -71,14 +71,14 @@ namespace harz {
 			std::cout << std::setw(80) << "START PRINT SECTION [NODE SET]" << std::endl;
 			uint32_t freeSlotsCnt = 0;
 			uint32_t OccpSlotsCnt = 0;
-			auto _data = cckhs_cntr.rawData();
-			for (uint32_t tablesI = 0; tablesI < cckhs_cntr.tablesCount(); tablesI++)
+			auto& data = cckhs_cntr.rawData();
+			for (auto& table : data)
 			{
-				for (uint32_t i = 0; i < cckhs_cntr.capacity(); i++)
+				for (auto& slot : table)
 				{
-					if (_data[tablesI][i].value)
+					if (slot.value)
 					{
-						std::cout << "  " << " Value: " << *_data[tablesI][i].value << "  ";
+						std::cout << "  " << " Value: " << *slot.value << "  ";
 						OccpSlotsCnt++;
 					}
 					else
@@ -100,14 +100,14 @@ namespace harz {
 			std::cout << std::setw(80) << "START PRINT SECTION [MAP]" << std::endl;
 			uint32_t freeSlotsCnt = 0;
 			uint32_t OccpSlotsCnt = 0;
-			auto _data = cckhs_cntr.rawData();
-			for (uint32_t tablesI = 0; tablesI < cckhs_cntr.tablesCount(); tablesI++)
+			auto& data = cckhs_cntr.rawData();
+			for (auto& table : data)
 			{
-				for (uint32_t i = 0; i < cckhs_cntr.capacity(); i++)
+				for (auto& slot : table)
 				{
-					if (_data[tablesI][i].occupied)
+					if (slot.occupied)
 					{
-						std::cout << "  " << " Key: " << _data[tablesI][i].key << " Value: " << _data[tablesI][i].value << "  ";
+						std::cout << "  " << " Key: " << slot.key << " Value: " << slot.value << "  ";
 						OccpSlotsCnt++;
 					}
 					else
@@ -129,14 +129,15 @@ namespace harz {
 			std::cout << std::setw(80) << "START PRINT SECTION [NODE MAP]" << std::endl;
 			uint32_t freeSlotsCnt = 0;
 			uint32_t OccpSlotsCnt = 0;
-			auto _data = cckhs_cntr.rawData();
-			for (uint32_t tablesI = 0; tablesI < cckhs_cntr.tablesCount(); tablesI++)
+
+			auto& data = cckhs_cntr.rawData();
+			for (auto& table : data)
 			{
-				for (uint32_t i = 0; i < cckhs_cntr.capacity(); i++)
+				for (auto& slot : table)
 				{
-					if (_data[tablesI][i].element)
+					if (slot.element)
 					{
-						std::cout << "  " << " Key: " << _data[tablesI][i].element->key << " Value: " << _data[tablesI][i].element->value << "  ";
+						std::cout << "  " << " Key: " << slot.element->key << " Value: " << slot.element->value << "  ";
 						OccpSlotsCnt++;
 					}
 					else
@@ -147,7 +148,10 @@ namespace harz {
 				}
 				std::cout << std::endl;
 			}
-			std::cout << " Total slots count: " << freeSlotsCnt + OccpSlotsCnt << " of which free slots: " << freeSlotsCnt << " occupied slots : " << OccpSlotsCnt << std::endl;
+
+			std::cout << " Total slots count: " << freeSlotsCnt +OccpSlotsCnt<< " of which free slots: "
+				<< freeSlotsCnt <<
+				" occupied slots : " << OccpSlotsCnt << std::endl;
 			std::cout << std::setw(80) << "END PRINT SECTION [NODE MAP]" << std::endl;
 		}
 

@@ -8,7 +8,7 @@
 #include "include/harz_cckhash_set.h"
 // custom params for tests
 
-const int maxIters = 200;
+const int maxIters = 50;
 const int waitingTime = 5;// in Seconds
 
 using namespace harz::demo;

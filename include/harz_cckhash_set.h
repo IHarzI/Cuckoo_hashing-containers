@@ -10,7 +10,7 @@
 #include <functional>
 
 // custom params, experiment with different values for better perfomance
-#define HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD (2.5f) 
+#define HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD (3.5f) 
 #define HARZ_CCKHASH_SET_RESIZE_MOD (1.5f)
 
 namespace harz
@@ -180,12 +180,13 @@ namespace harz
 			{
 				for (auto& slot : table)
 				{
-					if (predicate(slot.value))
-					{
-						slot.value = V();
-						slot.occupied = false;
-						erasuresCount += 1;
-					}
+					if (slot.occupied)
+						if (predicate(slot.value))
+						{
+							slot.value = V();
+							slot.occupied = false;
+							erasuresCount += 1;
+						}
 				}
 			}
 			return erasuresCount;
@@ -199,12 +200,13 @@ namespace harz
 			{
 				for (auto& slot : table)
 				{
-					if (predicate(slot.value))
-					{
-						slot.value = V();
-						slot.occupied = false;
-						erasuresCount += 1;
-					}
+					if (slot.occupied)
+						if (predicate(slot.value))
+						{
+							slot.value = V();
+							slot.occupied = false;
+							erasuresCount += 1;
+						}
 				}
 			}
 			return erasuresCount;
@@ -219,10 +221,11 @@ namespace harz
 			{
 				for (auto& slot : table)
 				{
-					if (predicate(slot.value))
-					{
-						count += 1;
-					}
+					if(slot.occupied)
+						if (predicate(slot.value))
+						{
+							count += 1;
+						}
 				}
 			}
 			return count;
@@ -526,20 +529,6 @@ namespace harz
 			}
 		}
 
-		~cuckooNodeHashSet()
-		{
-			for (auto& table : _data)
-			{
-				for (auto& slot : table)
-				{
-					if (slot.value)
-					{
-						delete slot.value;
-					}
-				}
-			}
-		}
-
 		cuckooNodeHashSet& operator=(const cuckooNodeHashSet&) = delete;
 		cuckooNodeHashSet(const cuckooNodeHashSet&) = delete;
 
@@ -548,7 +537,7 @@ namespace harz
 
 		struct TableSlot
 		{
-			V* value;
+			std::shared_ptr<V> value{ nullptr };
 		};
 
 		// Change capacity("rehash" set), possible loss of data (if newCapacity < current capacity of set)
@@ -627,7 +616,7 @@ namespace harz
 					}
 					else if (!_data[currentTable][hashedKey].value)
 					{
-						_data[currentTable][hashedKey].value = new V{ value };
+						_data[currentTable][hashedKey].value.reset( new V{ value });
 						return true;
 					}
 					iterations++;
@@ -658,7 +647,7 @@ namespace harz
 					}
 					else if (!_data[currentTable][hashedKey].value)
 					{
-						_data[currentTable][hashedKey].value = new V{ std::move(value) };
+						_data[currentTable][hashedKey].value.reset( new V{ std::move(value) });
 						return true;
 					}
 					iterations++;
@@ -666,13 +655,6 @@ namespace harz
 				resize();
 				iterations = 0;
 			}
-		}
-
-		void refreshSlot(TableSlot& slot)
-		{
-
-			delete slot.value;
-			slot.value = NULL;
 		}
 
 	public:
@@ -729,7 +711,7 @@ namespace harz
 					{
 						if (predicate(*slot.value))
 						{
-							refreshSlot(slot);
+							slot.value.reset();
 							erasuresCount += 1;
 						}
 					}
@@ -838,7 +820,7 @@ namespace harz
 				{
 					if (slot.value)
 					{
-						refreshSlot(slot);
+						slot.value.reset();
 					}
 				}
 			}
@@ -863,7 +845,7 @@ namespace harz
 					const uint32_t currentTable = inTableIndex % _tablesCount;
 					if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == element)
 					{
-						refreshSlot(_data[currentTable][hashedKey]);
+						_data[currentTable][hashedKey].value.reset();
 						results[iters] = true;
 					}
 				}
@@ -882,7 +864,7 @@ namespace harz
 				if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == value)
 				{
 
-					refreshSlot(_data[currentTable][hashedKey]);
+					_data[currentTable][hashedKey].value.reset();
 					return true;
 				}
 			}
@@ -899,7 +881,7 @@ namespace harz
 				if (_data[currentTable][hashedKey].value && *_data[currentTable][hashedKey].value == value)
 				{
 
-					refreshSlot(_data[currentTable][hashedKey]);
+					_data[currentTable][hashedKey].value.reset();
 					return true;
 				}
 			}
@@ -916,7 +898,7 @@ namespace harz
 
 				if (_data[currentTable][hashedKey].value)
 					if (*_data[currentTable][hashedKey].value == value)
-						return _data[currentTable][hashedKey].value;
+						return _data[currentTable][hashedKey].value.get();
 				iters++;
 			}
 			return nullptr;
@@ -932,7 +914,7 @@ namespace harz
 
 				if (_data[currentTable][hashedKey].value)
 					if (*_data[currentTable][hashedKey].value == value)
-						return _data[currentTable][hashedKey].value;
+						return _data[currentTable][hashedKey].value.get();
 				iters++;
 			}
 			return nullptr;
