@@ -529,12 +529,6 @@ namespace harz
 			}
 		}
 
-		cuckooNodeHashSet& operator=(const cuckooNodeHashSet&) = delete;
-		cuckooNodeHashSet(const cuckooNodeHashSet&) = delete;
-
-		cuckooNodeHashSet& operator=(cuckooNodeHashSet&& other) = delete;
-		cuckooNodeHashSet(cuckooNodeHashSet&& other) = delete;
-
 		struct TableSlot
 		{
 			std::shared_ptr<V> value{ nullptr };
@@ -551,11 +545,7 @@ namespace harz
 
 			_capacity = newCapacity;
 
-			_data.resize(_tablesCount);
-			for (uint32_t tables = 0; tables < _tablesCount; tables++)
-			{
-				_data[tables].resize(_capacity);
-			}
+			clear();
 
 			for (auto& table : oldData)
 			{
@@ -576,9 +566,9 @@ namespace harz
 				return false;
 
 			_tablesCount = newTablesCount;
+			_maxIters = _tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD;
 			resize(_capacity);
 
-			_maxIters = _tablesCount * HARZ_CCKHASH_SET_MAX_ITERATIONS_MOD;
 
 			return true;
 		}

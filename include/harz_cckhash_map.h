@@ -810,12 +810,6 @@ namespace harz
 			}
 		}
 
-		cuckooNodeHashMap& operator=(const cuckooNodeHashMap&) = delete;
-		cuckooNodeHashMap(const cuckooNodeHashMap&) = delete;
-
-		cuckooNodeHashMap& operator=(cuckooNodeHashMap&& other) = delete;
-		cuckooNodeHashMap(cuckooNodeHashMap&& other) = delete;
-
 		struct K_V_pair
 		{
 			K key;
@@ -839,11 +833,7 @@ namespace harz
 
 			_capacity = newCapacity;
 
-			_data.resize(_tablesCount);
-			for (uint32_t tables = 0; tables < _tablesCount; tables++)
-			{
-				_data[tables].resize(_capacity);
-			}
+			clear();
 
 			for (auto& table : oldData)
 			{
@@ -867,9 +857,9 @@ namespace harz
 				return false;
 
 			_tablesCount = newTablesCount;
-			resize(_capacity);
-
 			_maxIters = _tablesCount * HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD;
+
+			resize(_capacity);
 			return true;
 		};
 
@@ -1162,17 +1152,14 @@ namespace harz
 			return results;
 		}
 
-		// Erase all elements.
+		// Erase all elements
 		void clear()
 		{
 			for (auto& table : _data)
 			{
 				for (auto& slot : table)
 				{
-					if (slot.element)
-					{
-						slot.element.reset();
-					}
+					slot.element.reset();
 				}
 			}
 
