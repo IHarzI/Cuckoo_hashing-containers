@@ -147,7 +147,6 @@ void demo_node_set_test() {
 		totalErases += hashSet.erase(cdta);
 		++iter;
 	}
-
 	// insertion by init list
 	auto resultFromInsertionsByInitList = hashSet.insert({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'} });
 
@@ -224,6 +223,8 @@ void demo_map_test() {
 		}
 		++iter;
 	}
+	// insertion_or_assign operation on myval position in map 
+	totalInserts += hashMap.insert_or_assign(myval.data, { 155, 'r' });
 	// erase some elements, if they present in container
 	iter = 0;
 	while (iter < maxIters)
@@ -308,6 +309,9 @@ void demo_node_map_test() {
 		}
 		++iter;
 	}
+
+	// insertion_or_assign operation on myval position in map 
+	totalInserts += hashMap.insert_or_assign(myval.data, { 155,'r' });
 	// erase some elements, if they present in container
 	iter = 0;
 	while (iter < maxIters)

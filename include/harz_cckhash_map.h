@@ -79,9 +79,9 @@ namespace harz
 				return false;
 
 			_tablesCount = newTablesCount;
+			_maxIters = _tablesCount * HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD;
 			resize(_capacity);
 
-			_maxIters = _tablesCount * HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD;
 			return true;
 		};
 
@@ -335,15 +335,14 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].occupied)
-					if (_data[currentTable][hashedKey].key == key)
-					{
-						K_V_pair tmp;
-						tmp.key = _data[currentTable][hashedKey].key;
-						tmp.value = _data[currentTable][hashedKey].value;
-						erase(key);
-						return std::move(tmp);
-					}
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
+				{
+					K_V_pair tmp;
+					tmp.key = _data[currentTable][hashedKey].key;
+					tmp.value = _data[currentTable][hashedKey].value;
+					erase(key);
+					return std::move(tmp);
+				}
 				iters++;
 			}
 			return K_V_pair();
@@ -357,15 +356,14 @@ namespace harz
 			{
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
-				if (_data[currentTable][hashedKey].occupied)
-					if (_data[currentTable][hashedKey].key == key)
-					{
-						K_V_pair tmp;
-						tmp.key = _data[currentTable][hashedKey].key;
-						tmp.value = _data[currentTable][hashedKey].value;
-						erase(key);
-						return std::move(tmp);
-					}
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
+				{
+					K_V_pair tmp;
+					tmp.key = _data[currentTable][hashedKey].key;
+					tmp.value = _data[currentTable][hashedKey].value;
+					erase(key);
+					return std::move(tmp);
+				}
 				iters++;
 			}
 			return K_V_pair();
@@ -384,15 +382,14 @@ namespace harz
 				{
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
 					const int32_t currentTable = iters % _tablesCount;
-					if (_data[currentTable][hashedKey].occupied)
-						if (_data[currentTable][hashedKey].key == element)
-						{
-							K_V_pair tmp;
-							tmp.key = _data[currentTable][hashedKey].key;
-							tmp.value = _data[currentTable][hashedKey].value;
-							results.push_back(std::move(tmp));
-							erase(element);
-						}
+					if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == element)
+					{
+						K_V_pair tmp;
+						tmp.key = _data[currentTable][hashedKey].key;
+						tmp.value = _data[currentTable][hashedKey].value;
+						results.push_back(std::move(tmp));
+						erase(element);
+					}
 					iters++;
 				}
 			}
@@ -421,7 +418,7 @@ namespace harz
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, inTableIndex);
 					const uint32_t currentTable = inTableIndex % _tablesCount;
 
-					if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+					if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 					{
 						_data[currentTable][hashedKey].key = K();
 						_data[currentTable][hashedKey].value = V();
@@ -441,7 +438,7 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 				{
 					_data[currentTable][hashedKey].key = K();
 					_data[currentTable][hashedKey].value = V();
@@ -459,7 +456,7 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 				{
 					_data[currentTable][hashedKey].key = K();
 					_data[currentTable][hashedKey].value = V();
@@ -478,8 +475,7 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].occupied)
-					if (_data[currentTable][hashedKey].key == key)
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 						return &_data[currentTable][hashedKey].value;
 				iters++;
 			}
@@ -495,8 +491,7 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].occupied)
-					if (_data[currentTable][hashedKey].key == key)
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 						return &_data[currentTable][hashedKey].value;
 				iters++;
 			}
@@ -755,7 +750,7 @@ namespace harz
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 				{
 					return true;
 				}
@@ -770,7 +765,7 @@ namespace harz
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-				if (_data[currentTable][hashedKey].key == key && _data[currentTable][hashedKey].occupied)
+				if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
 				{
 					return true;
 				}
@@ -1088,15 +1083,14 @@ namespace harz
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
 
-				if (_data[currentTable][hashedKey].element)
-					if (_data[currentTable][hashedKey].element->key == key)
-					{
-						K_V_pair tmp;
-						tmp.key = _data[currentTable][hashedKey].element->key;
-						tmp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element.reset();
-						return std::move(tmp);
-					}
+				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
+				{
+					K_V_pair tmp;
+					tmp.key = _data[currentTable][hashedKey].element->key;
+					tmp.value = _data[currentTable][hashedKey].element->value;
+					_data[currentTable][hashedKey].element.reset();
+					return std::move(tmp);
+				}
 				iters++;
 			}
 			return K_V_pair();
@@ -1110,15 +1104,14 @@ namespace harz
 			{
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iters);
 				const uint32_t currentTable = iters % _tablesCount;
-				if (_data[currentTable][hashedKey].element)
-					if (_data[currentTable][hashedKey].element->key == key)
-					{
-						K_V_pair tmp;
-						tmp.key = _data[currentTable][hashedKey].element->key;
-						tmp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element.reset();
-						return std::move(tmp);
-					}
+				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
+				{
+					K_V_pair tmp;
+					tmp.key = _data[currentTable][hashedKey].element->key;
+					tmp.value = _data[currentTable][hashedKey].element->value;
+					_data[currentTable][hashedKey].element.reset();
+					return std::move(tmp);
+				}
 				iters++;
 			}
 			return K_V_pair();
@@ -1137,15 +1130,14 @@ namespace harz
 				{
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
 					const int32_t currentTable = iters % _tablesCount;
-					if (_data[currentTable][hashedKey].element)
-						if (_data[currentTable][hashedKey].key == element)
-						{
-							K_V_pair tmp;
-							tmp.key = _data[currentTable][hashedKey].element->key;
-							tmp.value = _data[currentTable][hashedKey].element->value;
-							_data[currentTable][hashedKey].element.reset();
-							results.push_back(std::move(tmp));
-						}
+					if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey]->key == element)
+					{
+						K_V_pair tmp;
+						tmp.key = _data[currentTable][hashedKey].element->key;
+						tmp.value = _data[currentTable][hashedKey].element->value;
+						_data[currentTable][hashedKey].element.reset();
+						results.push_back(std::move(tmp));
+					}
 					iters++;
 				}
 			}
