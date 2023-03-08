@@ -107,10 +107,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (contains(key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].occupied)
 					{
 						K_V_pair temp;
@@ -134,7 +130,7 @@ namespace harz
 			}
 		}
 
-		const bool _CCKHT_insertData(const K&& key, const V&& value, uint32_t iterations = 0)
+		const bool _CCKHT_insertData(K&& key, V&& value, uint32_t iterations = 0)
 		{
 			while (true)
 			{
@@ -143,10 +139,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (contains(key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].occupied)
 					{
 						K_V_pair temp;
@@ -179,10 +171,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
 
-					if (contains(k_v_pair.key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].occupied)
 					{
 						K_V_pair temp;
@@ -216,10 +204,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
 
-					if (contains(k_v_pair.key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].occupied)
 					{
 						K_V_pair temp;
@@ -227,7 +211,7 @@ namespace harz
 						temp.value = _data[currentTable][hashedKey].value;
 						_data[currentTable][hashedKey].key = std::move(k_v_pair.key);
 						_data[currentTable][hashedKey].value = std::move(k_v_pair.value);
-						k_v_pair = temp;
+						k_v_pair = std::move(temp);
 					}
 					else
 					{
@@ -263,7 +247,42 @@ namespace harz
 			return true;
 
 		}
-
+		// Count all elements that satisfy the predicate
+		// Predicate must take parameters in (K key, V value) form
+		template <typename PredicateT>
+		const uint32_t count_if(const PredicateT& predicate) const
+		{
+			uint32_t count = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.key, slot.value))
+					{
+						count += 1;
+					}
+				}
+			}
+			return count;
+		}
+		// Count all elements that satisfy the predicate
+		// Predicate must take parameters in (K key, V value) form
+		template <typename PredicateT>
+		const uint32_t count_if(const PredicateT&& predicate) const
+		{
+			uint32_t count = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (predicate(slot.key, slot.value))
+					{
+						count += 1;
+					}
+				}
+			}
+			return count;
+		}
 		// Erases all elements that satisfy the predicate from the container
 		// Predicate must take parameters in (K key, V value) form
 		template <typename PredicateT>
@@ -285,29 +304,10 @@ namespace harz
 			}
 			return erasuresCount;
 		}
-		// Count all elements that satisfy the predicate
-		// Predicate must take parameters in (K key, V value) form
-		template <typename PredicateT>
-		const uint32_t count_if(const PredicateT& predicate) const
-		{
-			uint32_t count = 0;
-			for (auto& table : _data)
-			{
-				for (auto& slot : table)
-				{
-					if (predicate(slot.key, slot.value))
-					{
-						count += 1;
-					}
-				}
-			}
-			return count;
-		}
-
 		// Erases all elements that satisfy the predicate pred from the container
 		// Predicate must take parameters in (K key, V value) form
 		template <typename PredicateT>
-		const uint32_t erase_if(const PredicateT&& predicate)
+		const uint32_t erase_if(PredicateT&& predicate)
 		{
 			uint32_t erasuresCount = 0;
 			for (auto& table : _data)
@@ -327,7 +327,7 @@ namespace harz
 		}
 
 		// Extract element by key
-		K_V_pair extract(K& key)
+		K_V_pair extract(const K& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -349,7 +349,7 @@ namespace harz
 		}
 
 		// Extract element by key
-		K_V_pair extract(K&& key)
+		K_V_pair extract(const K&& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -361,7 +361,7 @@ namespace harz
 					K_V_pair tmp;
 					tmp.key = _data[currentTable][hashedKey].key;
 					tmp.value = _data[currentTable][hashedKey].value;
-					erase(key);
+					erase(std::move(key));
 					return std::move(tmp);
 				}
 				iters++;
@@ -369,29 +369,27 @@ namespace harz
 			return K_V_pair();
 		}
 		// Extract elements by keys from init list
-		std::vector<K_V_pair> extract(std::initializer_list<K> l)
+		std::vector<K_V_pair> extract(const std::initializer_list<K>& l)
 		{
-			std::vector<K_V_pair> results;
-			results.reserve(l.size());
+			std::vector<K_V_pair> results(l.size());
 			uint32_t index = 0;
-			for (index < l.size(); index++;)
+			for (auto& element : l)
 			{
-				auto& element = l[index];
-				uint32_t iters = 0;
-				while (iters < _maxIters)
-				{
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
-					const int32_t currentTable = iters % _tablesCount;
-					if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == element)
-					{
-						K_V_pair tmp;
-						tmp.key = _data[currentTable][hashedKey].key;
-						tmp.value = _data[currentTable][hashedKey].value;
-						results.push_back(std::move(tmp));
-						erase(element);
-					}
-					iters++;
-				}
+				results[index] = std::move(extract(element));
+				index++;
+			}
+			return results;
+		}
+
+		// Extract elements by keys from init list
+		std::vector<K_V_pair> extract(const std::initializer_list<K>&& l)
+		{
+			std::vector<K_V_pair> results(l.size());
+			uint32_t index = 0;
+			for (auto& element : l)
+			{
+				results[index] = std::move(extract(element));
+				index++;
 			}
 			return results;
 		}
@@ -406,30 +404,7 @@ namespace harz
 				_data[tables].resize(_capacity);
 			}
 		}
-		// Erase elements by keys from init list.
-		std::vector<bool> erase(std::initializer_list<K> l)
-		{
-			std::vector<bool> results(l.size(), false);
-			uint32_t iters = 0;
-			for (auto key : l)
-			{
-				for (uint32_t inTableIndex = 0; inTableIndex < _maxIters; inTableIndex++)
-				{
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, inTableIndex);
-					const uint32_t currentTable = inTableIndex % _tablesCount;
-
-					if (_data[currentTable][hashedKey].occupied && _data[currentTable][hashedKey].key == key)
-					{
-						_data[currentTable][hashedKey].key = K();
-						_data[currentTable][hashedKey].value = V();
-						_data[currentTable][hashedKey].occupied = false;
-						results[iters] = true;
-					}
-				}
-				iters++;
-			}
-			return results;
-		}
+		
 		// Erase element by key
 		const bool erase(const K& key)
 		{
@@ -466,6 +441,32 @@ namespace harz
 			}
 			return false;
 		}
+		// Erase elements by keys from init list.
+		std::vector<bool> erase(const std::initializer_list<K>& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& key : l)
+			{
+				results[index] = std::move(erase(key));
+				index++;
+			}
+			return results;
+		}
+
+		// Erase elements by keys from init list.
+		std::vector<bool> erase(const std::initializer_list<K>&& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& key : l)
+			{
+				results[index] = std::move(erase(key));
+				index++;
+			}
+			return results;
+		}
+
 		// Find element by key, returns a pointer to value
 		V* find(const K& key)
 		{
@@ -483,7 +484,7 @@ namespace harz
 		}
 
 		// Find element by key, returns a pointer to value
-		V* find(const K&& key) const
+		V* find(const K&& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -500,30 +501,69 @@ namespace harz
 		// Insert element by key and value
 		const bool insert(const K& key, const V& value)
 		{
+			if (contains(key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(key, value);
 		}
 		// Insert element by {key} and {value}
 		const bool insert(const K&& key, const V&& value)
 		{
-			return _CCKHT_insertData(key, value);
+			if (contains(key))
+			{
+				return false;
+			}
+			return _CCKHT_insertData(std::move(key), std::move(value));
 		}
 		// Insert element by key, value
 		const bool insert(const K_V_pair& k_v_pair)
 		{
+			if (contains(k_v_pair.key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(k_v_pair);
 		}
 		// Insert element by {key, value}
 		const bool insert(const K_V_pair&& k_v_pair)
 		{
+			if (contains(k_v_pair.key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(std::move(k_v_pair));
 		}
+
 		// Insert elements by {{keys, values},{...},...}
-		std::vector<bool> insert(std::initializer_list<K_V_pair> l) {
+		std::vector<bool> insert(const std::initializer_list<K_V_pair>& l) {
 			std::vector<bool> results(l.size(), false);
 			uint32_t iter = 0;
-			for (auto element : l)
+			for (auto& element : l)
 			{
-				results[iter] = _CCKHT_insertData(std::move(element));
+				if (contains(element.key))
+				{ }
+				else
+				{
+					results[iter] = _CCKHT_insertData(element);
+				}
+				iter++;
+			}
+			return results;
+		}
+
+		// Insert elements by {{keys, values},{...},...}
+		std::vector<bool> insert(const std::initializer_list<K_V_pair>&& l) {
+			std::vector<bool> results(l.size(), false);
+			uint32_t iter = 0;
+			for (auto& element : l)
+			{
+				if (contains(element.key))
+				{ }
+				else
+				{
+					results[iter] = _CCKHT_insertData(element);
+				}
 				iter++;
 			}
 			return results;
@@ -538,38 +578,7 @@ namespace harz
 				return false;
 			}
 
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = key;
-						_data[currentTable][hashedKey].value = value;
-						_CCKHT_insertData(temp, iterations);
-						return true;
-						
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = key;
-						_data[currentTable][hashedKey].value = value;
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			return _CCKHT_insertData({ key,value });
 		}
 
 		const bool insert_or_assign(const K&& key, const V&& value)
@@ -580,38 +589,7 @@ namespace harz
 				*assignPos = value;
 				return false;
 			}
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = std::move(key);
-						_data[currentTable][hashedKey].value = std::move(value);
-						_CCKHT_insertData(temp, iterations);
-						return true;
-						
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = key;
-						_data[currentTable][hashedKey].value = value;
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			return _CCKHT_insertData({ std::move(key),std::move(value) });
 		}
 
 		const bool insert_or_assign(const K_V_pair& k_v_pair)
@@ -623,38 +601,7 @@ namespace harz
 				return false;
 			}
 
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = std::move(k_v_pair.key);
-						_data[currentTable][hashedKey].value = std::move(k_v_pair.value);
-						_CCKHT_insertData(temp, iterations);
-						return true;
-						
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = k_v_pair.key;
-						_data[currentTable][hashedKey].value = k_v_pair.value;
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			return _CCKHT_insertData(k_v_pair);
 		}
 
 		const bool insert_or_assign(K_V_pair&& k_v_pair)
@@ -666,41 +613,49 @@ namespace harz
 				return false;
 			}
 
-			uint32_t iterations = 0;
-			while (true)
+			return _CCKHT_insertData(std::move(k_v_pair));
+		}
+
+		const bool insert_or_assign(const std::initializer_list<K_V_pair>& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& element : l)
 			{
-
-				while (iterations < _maxIters)
+				auto assignPos = find(element.key);
+				if (assignPos)
 				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-							K_V_pair temp;
-							temp.key = _data[currentTable][hashedKey].element->key;
-							temp.value = _data[currentTable][hashedKey].element->value;
-							_data[currentTable][hashedKey].element->key = std::move(k_v_pair.key);
-							_data[currentTable][hashedKey].element->value = std::move(k_v_pair.value);
-							_CCKHT_insertData(temp, iterations);
-							return true;
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = std::move(k_v_pair.key);
-						_data[currentTable][hashedKey].value = std::move(k_v_pair.value);
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
+					*assignPos = element.value;
 				}
-				resize();
-				iterations = 0;
+				else
+				{
+					results[index] = _CCKHT_insertData(element);
+				}
+				index++;
+			}
+		}
+
+		const bool insert_or_assign(const std::initializer_list<K_V_pair>&& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& element : l)
+			{
+				auto assignPos = find(element.key);
+				if (assignPos)
+				{
+					*assignPos = element.value;
+				}
+				else
+				{
+					results[index] = _CCKHT_insertData(element);
+				}
+				index++;
 			}
 		}
 
 		// Get internal container
-		std::vector<std::vector<TableSlot>>& rawData()
+		const std::vector<std::vector<TableSlot>>& rawData() const
 		{
 			return _data;
 		}
@@ -731,7 +686,7 @@ namespace harz
 		{
 			return find(key);
 		}
-		// Calculate load factor
+		// Get load factor
 		const double loadFactor() const
 		{
 			uint32_t result = 0;
@@ -772,15 +727,15 @@ namespace harz
 			}
 			return false;
 		}
-		// Return count of values on [key]
+		// Return count of values on [key] (1 or 0)
 		const int count(const K& key) const
 		{
 			return contains(key);
 		}
-		// Return count of values on [key]
+		// Return count of values on [key] (1 or 0)
 		const int count(const K&& key) const
 		{
-			return contains(key);
+			return contains(std::move(key));
 		}
 	};
 	
@@ -880,10 +835,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (contains(key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].element)
 					{
 						K_V_pair temp;
@@ -914,10 +865,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
 
-					if (contains(key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].element)
 					{
 						K_V_pair temp;
@@ -948,10 +895,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
 
-					if (contains(k_v_pair.key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].element)
 					{
 						K_V_pair temp;
@@ -983,10 +926,6 @@ namespace harz
 					const uint32_t currentTable = iterations % _tablesCount;
 					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
 
-					if (contains(k_v_pair.key))
-					{
-						return false;
-					}
 					if (_data[currentTable][hashedKey].element)
 					{
 						K_V_pair temp;
@@ -994,7 +933,7 @@ namespace harz
 						temp.value = _data[currentTable][hashedKey].element->value;
 						_data[currentTable][hashedKey].element->key = std::move(k_v_pair.key);
 						_data[currentTable][hashedKey].element->value = std::move(k_v_pair.value);
-						k_v_pair = temp;
+						k_v_pair = std::move(temp);
 					}
 					else
 					{
@@ -1051,6 +990,50 @@ namespace harz
 			return count;
 		}
 
+		// Count all elements that satisfy the predicate
+		// Predicate must take parameters in (K key, V value) form
+		template <typename PredicateT>
+		const uint32_t count_if(const PredicateT&& predicate) const
+		{
+			uint32_t count = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.element)
+					{
+						if (predicate(slot.element->key, slot.element->value))
+						{
+							count += 1;
+						}
+					}
+				}
+			}
+			return count;
+		}
+
+		// Erases all elements that satisfy the predicate pred from the container
+		// Predicate must take parameters in (K key, V value) form
+		template <typename PredicateT>
+		const uint32_t erase_if(const PredicateT& predicate)
+		{
+			uint32_t erasuresCount = 0;
+			for (auto& table : _data)
+			{
+				for (auto& slot : table)
+				{
+					if (slot.element)
+					{
+						if (predicate(slot.element->key, slot.element->value))
+						{
+							slot.element.reset();
+							erasuresCount += 1;
+						}
+					}
+				}
+			}
+			return erasuresCount;
+		}
 		// Erases all elements that satisfy the predicate pred from the container
 		// Predicate must take parameters in (K key, V value) form
 		template <typename PredicateT>
@@ -1075,7 +1058,7 @@ namespace harz
 		}
 
 		// Extract element by key
-		K_V_pair extract(K& key)
+		K_V_pair extract(const K& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -1097,7 +1080,7 @@ namespace harz
 		}
 
 		// Extract element by key
-		K_V_pair extract(K&& key)
+		K_V_pair extract(const K&& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -1117,29 +1100,27 @@ namespace harz
 			return K_V_pair();
 		}
 		// Extract elements by keys from init list
-		std::vector<K_V_pair> extract(std::initializer_list<K> l)
+		std::vector<K_V_pair> extract(const std::initializer_list<K>& l)
 		{
-			std::vector<K_V_pair> results;
-			results.reserve(l.size());
+			std::vector<K_V_pair> results(l.size());
 			uint32_t index = 0;
-			for (index < l.size(); index++;)
+			for (auto& element : l)
 			{
-				auto& element = l[index];
-				uint32_t iters = 0;
-				while (iters < _maxIters)
-				{
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(element, _capacity, _tablesCount, iters);
-					const int32_t currentTable = iters % _tablesCount;
-					if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey]->key == element)
-					{
-						K_V_pair tmp;
-						tmp.key = _data[currentTable][hashedKey].element->key;
-						tmp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element.reset();
-						results.push_back(std::move(tmp));
-					}
-					iters++;
-				}
+				results[index] = std::move(extract(element));
+				index++;
+			}
+			return results;
+		}
+
+		// Extract elements by keys from init list
+		std::vector<K_V_pair> extract(const std::initializer_list<K>&& l)
+		{
+			std::vector<K_V_pair> results(l.size());
+			uint32_t index = 0;
+			for (auto& element : l)
+			{
+				results[index] = std::move(extract(element));
+				index++;
 			}
 			return results;
 		}
@@ -1161,28 +1142,7 @@ namespace harz
 				_data[tables].resize(_capacity);
 			}
 		}
-		// Erase elements by keys from init list.
-		std::vector<bool> erase(std::initializer_list<K> l)
-		{
-			std::vector<bool> results(l.size(), false);
-			uint32_t iters = 0;
-			for (auto key : l)
-			{
-				for (uint32_t inTableIndex = 0; inTableIndex < _maxIters; inTableIndex++)
-				{
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, inTableIndex);
-					const uint32_t currentTable = inTableIndex % _tablesCount;
-
-					if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
-					{
-						_data[currentTable][hashedKey].element.reset();
-						results[iters] = true;
-					}
-				}
-				iters++;
-			}
-			return results;
-		}
+	
 		// Erase element by key
 		const bool erase(const K& key)
 		{
@@ -1215,8 +1175,32 @@ namespace harz
 			}
 			return false;
 		}
+		// Erase elements by keys from init list.
+		std::vector<bool> erase(const std::initializer_list<K>& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& key : l)
+			{
+				results[index] = std::move(erase(key));
+				index++;
+			}
+			return results;
+		}
+		// Erase elements by keys from init list.
+		std::vector<bool> erase(const std::initializer_list<K>&& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& key : l)
+			{
+				results[index] = std::move(erase(key));
+				index++;
+			}
+			return results;
+		}
 		// Find element by key, returns a pointer to value
-		V* find(const K& key) 
+		V* find(const K& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -1233,7 +1217,7 @@ namespace harz
 		}
 
 		// Find element by key, returns a pointer to value
-		V* find(const K&& key) 
+		V* find(const K&& key)
 		{
 			uint32_t iters = 0;
 			while (iters < _maxIters)
@@ -1251,22 +1235,69 @@ namespace harz
 		// Insert element by key and value
 		const bool insert(const K& key, const V& value)
 		{
+			if (contains(key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(key, value);
 		}
 		// Insert element by {key} and {value}
 		const bool insert(const K&& key, const V&& value)
 		{
+			if (contains(key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(key, value);
 		}
 		// Insert element by key, value
 		const bool insert(const K_V_pair& k_v_pair)
 		{
+			if (contains(k_v_pair.key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(k_v_pair);
 		}
 		// Insert element by {key, value}
 		const bool insert(const K_V_pair&& k_v_pair)
 		{
+			if (contains(k_v_pair.key))
+			{
+				return false;
+			}
 			return _CCKHT_insertData(std::move(k_v_pair));
+		}
+
+		// Insert elements by {{keys, values},{...},...}
+		std::vector<bool> insert(const std::initializer_list<K_V_pair>& l) {
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& element : l)
+			{
+				if (contains(element.key))
+				{
+				}
+				else
+					results[index] = (std::move(_CCKHT_insertData(element)));
+				index++;
+			}
+			return results;
+		}
+
+		// Insert elements by {{keys, values},{...},...}
+		std::vector<bool> insert(const std::initializer_list<K_V_pair>&& l) {
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& element : l)
+			{
+				if (contains(element.key))
+				{}
+				else
+					results[index] = (std::move(_CCKHT_insertData(element)));
+				index++;
+			}
+			return results;
 		}
 
 		const bool insert_or_assign(const K& key, const V& value)
@@ -1277,36 +1308,8 @@ namespace harz
 				*assignPos = value;
 				return false;
 			}
-
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = key;
-						_data[currentTable][hashedKey].element->value = value;
-						_CCKHT_insertData(temp, iterations);
-						return true;
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset( new K_V_pair{ key,value});
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			else
+				return _CCKHT_insertData(key, value);
 		}
 
 		const bool insert_or_assign(const K&& key, const V&& value)
@@ -1317,36 +1320,8 @@ namespace harz
 				*assignPos = std::move(value);
 				return false;
 			}
-
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = std::move(key);
-						_data[currentTable][hashedKey].element->value = std::move(value);
-						_CCKHT_insertData(temp, iterations);
-						return true;
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset(new K_V_pair{key,value});
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			else
+				return _CCKHT_insertData(std::move(key),std::move(value));
 		}
 
 		const bool insert_or_assign(const K_V_pair& k_v_pair)
@@ -1357,39 +1332,11 @@ namespace harz
 				*assignPos = k_v_pair.value;
 				return false;
 			}
-
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{						
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = std::move(k_v_pair.key);
-						_data[currentTable][hashedKey].element->value = std::move(k_v_pair.value);
-						_CCKHT_insertData(temp, iterations);
-						return true;
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset(new K_V_pair{k_v_pair});
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			else
+				return _CCKHT_insertData(k_v_pair);
 		}
 
-		const bool insert_or_assign(K_V_pair&& k_v_pair)
+		const bool insert_or_assign(const K_V_pair&& k_v_pair)
 		{
 			auto assignPos = find(k_v_pair.key);
 			if (assignPos)
@@ -1397,52 +1344,52 @@ namespace harz
 				*assignPos = std::move(k_v_pair.value);
 				return false;
 			}
-
-			uint32_t iterations = 0;
-			while (true)
-			{
-
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = std::move(k_v_pair.key);
-						_data[currentTable][hashedKey].element->value = std::move(k_v_pair.value);
-						_CCKHT_insertData(temp, iterations);
-						return true;
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset(new K_V_pair{std::move(k_v_pair)});
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
+			else
+				return _CCKHT_insertData(std::move(k_v_pair));
 		}
 
-		// Insert elements by {{keys, values},{...},...}
-		std::vector<bool> insert(std::initializer_list<K_V_pair> l) {
+		const bool insert_or_assign(const std::initializer_list<K_V_pair>& l)
+		{
 			std::vector<bool> results(l.size(), false);
-			uint32_t iter = 0;
-			for (auto element : l)
+			uint32_t index = 0;
+			for (auto& element : l)
 			{
-				results[iter] = _CCKHT_insertData(std::move(element));
-				iter++;
-			} 
+				auto assignPos = find(element.key);
+				if (assignPos)
+				{
+					*assignPos = element.value;
+				}
+				else
+				{
+					results[index] = (std::move(_CCKHT_insertData(element)));
+				}
+				index++;
+			}
+			return results;
+		}
+
+		const bool insert_or_assign(const std::initializer_list<K_V_pair>&& l)
+		{
+			std::vector<bool> results(l.size(), false);
+			uint32_t index = 0;
+			for (auto& element : l)
+			{
+				auto assignPos = find(element.key);
+				if (assignPos)
+				{
+					*assignPos = element.value;
+				}
+				else
+				{
+					results[index] = (std::move(_CCKHT_insertData(element)));
+				}
+				index++;
+			}
 			return results;
 		}
 
 		// Get internal container
-		std::vector<std::vector<TableSlot>>& rawData()
+		const std::vector<std::vector<TableSlot>>& rawData() const
 		{
 			return _data;
 		}
@@ -1473,7 +1420,7 @@ namespace harz
 		{
 			return find(key);
 		}
-		// Calculate load factor
+		// Get load factor
 		const double loadFactor() const
 		{
 			uint32_t result = 0;
@@ -1514,12 +1461,12 @@ namespace harz
 			}
 			return false;
 		}
-		// Return count of values on [key]
+		// Return count of values on [key] (1 or 0)
 		const int count(const K& key) const
 		{
 			return contains(key);
 		}
-		// Return count of values on [key]
+		// Return count of values on [key] (1 or 0)
 		const int count(const K&& key) const
 		{
 			return contains(key);

@@ -8,7 +8,7 @@
 #include "include/harz_cckhash_set.h"
 // custom params for tests
 
-const int maxIters = 50;
+const int maxIters = 100;
 const int waitingTime = 5;// in Seconds
 
 using namespace harz::demo;
@@ -46,6 +46,8 @@ void demo_set_test() {
 		}
 		++iter;
 	}
+	// try to extract by init list
+	auto extract = hashSet.extract({ {1525,'r'},{25634634,'D'} });
 
 	// erase some elements, if they present in container (if luck give us chance, because CstData have 2 members, each have random value and each must be == for successful erasure)
 	iter = 0;
@@ -136,6 +138,8 @@ void demo_node_set_test() {
 		}
 		++iter;
 	}
+	// try to extract by init list
+	auto extract = hashSet.extract({ {1525,'r'},{25634634,'D'} });
 
 	// erase some elements, if they present in container (if luck give us chance, because CstData have 2 members, each have random value and each must be == for successful erasure)
 	iter = 0;
@@ -223,6 +227,8 @@ void demo_map_test() {
 		}
 		++iter;
 	}
+	// try to extract by init list
+	auto extract = hashMap.extract({ 200,1500,250 });
 	// insertion_or_assign operation on myval position in map 
 	totalInserts += hashMap.insert_or_assign(myval.data, { 155, 'r' });
 	// erase some elements, if they present in container
@@ -309,7 +315,8 @@ void demo_node_map_test() {
 		}
 		++iter;
 	}
-
+	// try to extract by init list
+	auto extract = hashMap.extract({ 200,1500,250 });
 	// insertion_or_assign operation on myval position in map 
 	totalInserts += hashMap.insert_or_assign(myval.data, { 155,'r' });
 	// erase some elements, if they present in container
