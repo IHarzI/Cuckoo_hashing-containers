@@ -1535,6 +1535,36 @@ namespace harz
 		{
 			return find(key);
 		}
+		// Get const shared ptr to element in map by[key]
+		const std::shared_ptr<const K_V_pair> getShare(const K& key) const
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
+				{
+					return _data[currentTable][hashedKey].element;
+				}
+			}
+			return nullptr;
+		}
+		// Get const shared ptr to element in map by[key]
+		const std::shared_ptr<const K_V_pair> getShare(const K&& key) const
+		{
+			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			{
+				const uint32_t currentTable = iterations % _tablesCount;
+				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
+
+				if (_data[currentTable][hashedKey].element && _data[currentTable][hashedKey].element->key == key)
+				{
+					return _data[currentTable][hashedKey].element;
+				}
+			}
+			return nullptr;
+		}
 		// Get load factor
 		const double loadFactor() const
 		{

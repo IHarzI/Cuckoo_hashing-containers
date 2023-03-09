@@ -74,6 +74,7 @@ void demo_set_test() {
 		}
 
 	}
+	
 	// insertion by init list
 	auto resultFromInsertionsByInitList = hashSet.insert({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'}});
 
@@ -214,8 +215,8 @@ void demo_node_set_test() {
 
 	// printing set
 	harz::demo::print_CCKHSH_container(hashSet);
-
-	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashSet.find(myval) << std::endl;
+	// example use of getShare
+	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashSet.getShare(myval).get() << std::endl;
 	std::cout << " End of [NODE SET] test, wait " << waitingTime << " seconds..." << std::endl;
 
 	std::cout << "Set test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
@@ -396,7 +397,6 @@ void demo_node_map_test() {
 		}
 
 	}
-
 	// insertion by init list
 	auto insertionsFromInitList = hashMap.insert({ {256,{5,'%'} }, { -5345645,{25,'2'} }, { -19,{35,'P'} } });
 
@@ -431,8 +431,8 @@ void demo_node_map_test() {
 	}
 	// printing set after insertion, after resizing, after restraining...
 	print_CCKHSH_container(hashMap);
-
-	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashMap.find(myval.data) << std::endl;
+	// example use of getShare
+	std::cout << "\n My value, inserted at the beginning of the test, located here : " << hashMap.getShare(myval.data).get() << std::endl;
 	std::cout << " End of [NODE MAP] test, wait " << waitingTime << " seconds..." << std::endl;
 	std::cout << "Map test time duration is: " << SeedFromTime() - start << " ms" << std::endl;
 	std::cout << "Map load factor: " << hashMap.loadFactor() << std::endl;
