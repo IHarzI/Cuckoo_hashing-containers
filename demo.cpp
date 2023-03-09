@@ -60,6 +60,20 @@ void demo_set_test() {
 		++iter;
 	}
 
+	{
+		// insert from array
+		const uint32_t size = 25;
+		CstData cstDataArr[size];
+		for (auto& data : cstDataArr)
+		{
+			data = { rand(),(char)(rand() % 255) };
+		}
+		for (bool bol : hashSet.insert_from_array(cstDataArr, size))
+		{
+			totalInserts += bol;
+		}
+
+	}
 	// insertion by init list
 	auto resultFromInsertionsByInitList = hashSet.insert({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'}});
 
@@ -151,6 +165,21 @@ void demo_node_set_test() {
 		totalErases += hashSet.erase(cdta);
 		++iter;
 	}
+
+	{
+		// insert from array
+		const uint32_t size = 25;
+		CstData cstDataArr[size];
+		for (auto& data : cstDataArr)
+		{
+			data = { rand(),(char)(rand() % 255) };
+		}
+		for (bool bol : hashSet.insert_from_array(cstDataArr, size))
+		{
+			totalInserts += bol;
+		}
+
+	}
 	// insertion by init list
 	auto resultFromInsertionsByInitList = hashSet.insert({ { 5,'R' }, { 1534632,'^' }, { 153 ,'$'} });
 
@@ -239,7 +268,27 @@ void demo_map_test() {
 		totalErases +=  hashMap.erase(key);
 		++iter;
 	}
-	harz::cuckooHashMap<int, CstData> anMap = hashMap;
+
+	{
+		// insert from array
+		const uint32_t size = 25;
+		CstData cstDataArr[size];
+		int keysArr[size];
+		for (auto& data : cstDataArr)
+		{
+			data = { rand(),(char)(rand() % 255) };
+		}
+		for (auto& key : keysArr)
+		{
+			key = rand();
+		}
+		for (bool bol : hashMap.insert_from_array(keysArr, cstDataArr, size))
+		{
+			totalInserts += bol;
+		}
+
+	}
+
 	// insertion by init list
 	auto insertionsFromInitList = hashMap.insert({ {256,{5,'%'} }, { -5345645,{25,'2'} }, { -19,{35,'P'} }});
 
@@ -326,6 +375,26 @@ void demo_node_map_test() {
 		int key = rand();
 		totalErases += hashMap.erase(key);
 		++iter;
+	}
+
+	{
+		// insert from array
+		const uint32_t size = 25;
+		CstData cstDataArr[size];
+		int keysArr[size];
+		for (auto& data : cstDataArr)
+		{
+			data = { rand(),(char)(rand() % 255) };
+		}
+		for (auto& key : keysArr)
+		{
+			key = rand();
+		}
+		for (bool bol : hashMap.insert_from_array(keysArr, cstDataArr, size))
+		{
+			totalInserts += bol;
+		}
+
 	}
 
 	// insertion by init list
