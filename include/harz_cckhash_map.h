@@ -11,7 +11,7 @@
 #include <memory>
 #include <stdint.h>
 // custom params, experiment with different values for better perfomance
-#define HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD (3.7f) 
+#define HARZ_CCKHASH_MAP_MAX_ITERATIONS_MOD (3.5f) 
 #define HARZ_CCKHASH_MAP_RESIZE_MOD (1.75f)
 
 namespace harz
@@ -99,102 +99,6 @@ namespace harz
 			return ((std::hash< uint32_t>()(std::hash<K>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
 
-		const bool _CCKHT_insertData(const K& key, const V& value, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = key;
-						_data[currentTable][hashedKey].value = value;
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = key;
-						_data[currentTable][hashedKey].value = value;
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
-		const bool _CCKHT_insertData(K&& key, V&& value, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = std::move(key);
-						_data[currentTable][hashedKey].value = std::move(value);
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = std::move(key);
-						_data[currentTable][hashedKey].value = std::move(value);
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
-		const bool _CCKHT_insertData(const K_V_pair& k_v_pair, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].occupied)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].key;
-						temp.value = _data[currentTable][hashedKey].value;
-						_data[currentTable][hashedKey].key = k_v_pair.key;
-						_data[currentTable][hashedKey].value = k_v_pair.value;
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].key = k_v_pair.key;
-						_data[currentTable][hashedKey].value = k_v_pair.value;
-						_data[currentTable][hashedKey].occupied = true;
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
 		const bool _CCKHT_insertData(K_V_pair&& k_v_pair, uint32_t iterations = 0)
 		{
 			while (true)
@@ -271,7 +175,7 @@ namespace harz
 		// Check if map contains value on [key], 0 - not occupied, 1 - has same key, 2 collision
 		std::pair<TableSlot*, const int> _contains_with_place(const K& key)
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -291,7 +195,7 @@ namespace harz
 		// Check if map contains value on [key], 0 - not occupied, 1 - has same key, 2 collision
 		std::pair<TableSlot*, const int> _contains_with_place(const K&& key)
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -760,7 +664,7 @@ namespace harz
 		// Check if map contains value on [key]
 		const bool contains(const K& key) const
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -775,7 +679,7 @@ namespace harz
 		// Check if map contains value on [key]
 		const bool contains(const K&& key) const
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -886,96 +790,6 @@ namespace harz
 			return ((std::hash< uint32_t>()(std::hash<K>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
 
-		const bool _CCKHT_insertData(const K& key, const V& value, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = key;
-						_data[currentTable][hashedKey].element->value = value;
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset(new K_V_pair{ key, value });
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
-		const bool _CCKHT_insertData(const K&& key, const V&& value, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = std::move(key);
-						_data[currentTable][hashedKey].element->value = std::move(value);
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset(new K_V_pair{ key, value });
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
-		const bool _CCKHT_insertData(const K_V_pair& k_v_pair, uint32_t iterations = 0)
-		{
-			while (true)
-			{
-				while (iterations < _maxIters)
-				{
-					const uint32_t currentTable = iterations % _tablesCount;
-					const uint32_t hashedKey = _g_CCKHT_l_hashFunction(k_v_pair.key, _capacity, _tablesCount, iterations);
-
-					if (_data[currentTable][hashedKey].element)
-					{
-						K_V_pair temp;
-						temp.key = _data[currentTable][hashedKey].element->key;
-						temp.value = _data[currentTable][hashedKey].element->value;
-						_data[currentTable][hashedKey].element->key = k_v_pair.key;
-						_data[currentTable][hashedKey].element->value = k_v_pair.value;
-						return _CCKHT_insertData(std::move(temp), iterations);
-					}
-					else
-					{
-						_data[currentTable][hashedKey].element.reset(new K_V_pair{ k_v_pair.key, k_v_pair.value });
-						return true;
-					}
-					iterations++;
-				}
-				resize();
-				iterations = 0;
-			}
-		}
-
 		const bool _CCKHT_insertData(K_V_pair&& k_v_pair, uint32_t iterations = 0)
 		{
 			while (true)
@@ -1045,7 +859,7 @@ namespace harz
 		// Check if map contains value on [key], 0 - not occupied, 1 - has same key, 2 collision
 		std::pair<TableSlot*, const int> _contains_with_place(const K& key)
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -1065,7 +879,7 @@ namespace harz
 		// Check if map contains value on [key], 0 - not occupied, 1 - has same key, 2 collision
 		std::pair<TableSlot*, const int> _contains_with_place(const K&& key)
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -1414,7 +1228,7 @@ namespace harz
 				return false;
 			}
 			else
-				return _CCKHT_insertData(key, value);
+				return _CCKHT_insertData({ key, value });
 		}
 
 		const bool insert_or_assign(const K&& key, const V&& value)
@@ -1426,7 +1240,7 @@ namespace harz
 				return false;
 			}
 			else
-				return _CCKHT_insertData(std::move(key), std::move(value));
+				return _CCKHT_insertData({ std::move(key), std::move(value) });
 		}
 
 		const bool insert_or_assign(const K_V_pair& k_v_pair)
@@ -1538,7 +1352,7 @@ namespace harz
 		// Get const shared ptr to element in map by[key]
 		const std::shared_ptr<const K_V_pair> getShare(const K& key) const
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -1553,7 +1367,7 @@ namespace harz
 		// Get const shared ptr to element in map by[key]
 		const std::shared_ptr<const K_V_pair> getShare(const K&& key) const
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -1579,7 +1393,7 @@ namespace harz
 		// Check if map contains value on [key]
 		const bool contains(const K& key) const
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
@@ -1594,7 +1408,7 @@ namespace harz
 		// Check if map contains value on [key]
 		const bool contains(const K&& key) const
 		{
-			for (uint32_t iterations = 0; iterations < _tablesCount; iterations++)
+			for (uint32_t iterations = 0; iterations < _maxIters; iterations++)
 			{
 				const uint32_t currentTable = iterations % _tablesCount;
 				const uint32_t hashedKey = _g_CCKHT_l_hashFunction(key, _capacity, _tablesCount, iterations);
