@@ -83,7 +83,7 @@ namespace harz
 
 		std::vector<std::vector<TableSlot>> _data;
 
-		const std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		const uint32_t _g_CCKHT_l_hashFunction(const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i) const
 		{
 			return ((std::hash< uint32_t>()(std::hash<V>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
@@ -645,7 +645,7 @@ namespace harz
 
 		std::vector<std::vector<TableSlot>> _data;
 
-		const std::function <const uint32_t(V, uint32_t, uint32_t, uint32_t)> _g_CCKHT_l_hashFunction = [](const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i)-> const uint32_t
+		const uint32_t _g_CCKHT_l_hashFunction(const V& key, uint32_t cap, uint32_t tablecnt, uint32_t i) const
 		{
 			return ((std::hash< uint32_t>()(std::hash<V>()(key) + std::hash< uint32_t>()(i % (tablecnt + cap))))) % cap;
 		};
