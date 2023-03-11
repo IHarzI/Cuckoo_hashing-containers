@@ -39,7 +39,7 @@ void demo_set_test() {
 		totalInserts += hashSet.insert(cdta);
 		// if our load factor is more than 0.6, we can call restrain to increase tables in the set by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashSet.loadFactor() > 0.9)
+		if (hashSet.loadFactor() > 0.6)
 		{
 			std::cout << "\nRestrain [SET]\n";
 			hashSet.restrain(hashSet.tablesCount() + 1);
@@ -146,7 +146,7 @@ void demo_node_set_test() {
 		
 		// if our load factor is more than 0.6, we can call restrain to increase tables in the set by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashSet.loadFactor() > 0.9)
+		if (hashSet.loadFactor() > 0.6)
 		{
 			std::cout << "\nRestrain [NODE SET]\n";
 			hashSet.restrain(hashSet.tablesCount() + 1);
@@ -250,7 +250,7 @@ void demo_map_test() {
 		totalInserts += hashMap.insert(key, cdta);
 		// if our load factor is more than 0.6, we can call restrain and increase tables in the map by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashMap.loadFactor() > 0.9)
+		if (hashMap.loadFactor() > 0.6)
 		{
 			std::cout << "\nRestrain [MAP]\n";
 			hashMap.restrain(hashMap.tablesCount() + 1);
@@ -358,7 +358,7 @@ void demo_node_map_test() {
 		totalInserts += hashMap.insert(key, cdta);
 		// if our load factor is more than 0.6, we can call restrain and increase tables in the map by 1
 		// Note, better to specify the tables count at the construction point(if you need), as it is an expensive operation
-		if (hashMap.loadFactor() > 0.9)
+		if (hashMap.loadFactor() > 0.6)
 		{
 			std::cout << "\nRestrain [NODE MAP]\n";
 			hashMap.restrain(hashMap.tablesCount() + 1);

@@ -16,7 +16,6 @@
 
 namespace harz
 {
-
 	template<typename K, typename V>
 	class cuckooHashMap
 	{
